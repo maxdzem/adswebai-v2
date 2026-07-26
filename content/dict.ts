@@ -27,6 +27,9 @@ const en = {
   lang: {
     change: "Change language",
     choose: "Choose your language",
+    close: "Close",
+    isDefault: "Default language",
+    isTranslated: "AI-assisted translation",
   },
 
   common: {
@@ -339,6 +342,9 @@ const ru: Dict = {
   lang: {
     change: "Сменить язык",
     choose: "Выберите язык",
+    close: "Закрыть",
+    isDefault: "Основной язык",
+    isTranslated: "Перевод с помощью AI",
   },
 
   common: {

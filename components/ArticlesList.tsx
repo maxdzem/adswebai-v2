@@ -161,9 +161,11 @@ export default function ArticlesList({ dict }: { dict: Dict }) {
   return (
     <section
       ref={sectionRef}
-      // -mt-[18cm]: вырезаем пустой хвост секции с кругом — к этому моменту
-      // круг уже схлопнулся в ничто, и там оставался мёртвый экран
-      className="-mt-[18cm] bg-cream px-6 pb-40 pt-28 text-ink lg:px-10"
+      // -mt-[21.5cm]: вырезаем пустой хвост секции с кругом — к этому моменту
+      // круг уже схлопнулся в ничто, и там оставался мёртвый экран.
+      // Было 18cm, поднято ещё на 3.5cm — вместе с секцией едет и всё,
+      // что идёт ниже (форма, футер), так как это обычный поток
+      className="-mt-[21.5cm] bg-cream px-6 pb-40 pt-28 text-ink lg:px-10"
     >
       <h2 data-list-heading className="type-display fs-display-m">
         {dict.articles.heading}

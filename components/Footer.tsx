@@ -101,11 +101,15 @@ export default function Footer({ locale, dict }: { locale: Locale; dict: Dict })
 
   return (
     // Фон футера — #191715 (глубже основного ink, как в референсе)
-    <footer className="bg-[#191715] px-6 pb-10 pt-20 text-cream lg:px-10">
+    <footer className="bg-[#191715] px-6 pb-10 pt-16 text-cream lg:px-10">
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-12">
-        <p className="fs-label text-white/60 lg:col-span-2">{dict.footer.keepExploring}</p>
+        <p className="fs-label text-white/60 lg:col-span-1">
+          {dict.footer.keepExploring}
+        </p>
 
-        <nav className="lg:col-span-3">
+        {/* ml-[5cm]: крупные ссылки отодвинуты от левого края —
+            заодно точка-маркер (-left-6) перестаёт упираться в границу */}
+        <nav className="lg:col-span-3 lg:ml-[5cm]">
           {BIG_LINKS.map((l) => (
             // Как пункты шапки: точка «падает» слева, слово подпрыгивает
             // (те же кейфреймы dot-in/dot-out/label-bounce из globals.css)
@@ -123,25 +127,32 @@ export default function Footer({ locale, dict }: { locale: Locale; dict: Dict })
           ))}
         </nav>
 
-        <div className="lg:col-span-4">
+        {/* Колонка сдвинута вправо на 4cm (lg:ml-[4cm]). Ширина колонки
+            расширена до 6 из 12 — иначе длинные названия документов
+            переносились бы после сдвига. Отступ только на lg: на мобильном
+            колонка одна и сдвигать её некуда. */}
+        <div className="lg:col-span-6 lg:ml-[4cm]">
           {SMALL_LINKS.map((l) => (
             // Механика Connect: слово уезжает вправо, стрелка гаснет сзади
             // и её круг-дубль появляется ПЕРЕД словом
-            <div key={l.href} data-btn-hover className="py-1">
+            <div key={l.href} data-btn-hover className="py-1.5">
+              {/* Кружки крупнее и залиты #2D2D2D — на фоне футера
+                  #191715 они читаются как отдельный элемент, а не как
+                  тонкий контур; стрелка внутри остаётся светлой */}
               <SwapLink
                 label={l.label}
                 href={l.href}
-                size={30}
-                gap={14}
-                iconSize={12}
-                circleClass="border border-white/25 text-current"
-                className="text-[19px] font-medium leading-[1.35]"
+                size={38}
+                gap={16}
+                iconSize={15}
+                circleClass="bg-[#2D2D2D] border border-white/20 text-cream"
+                className="text-[23px] font-medium leading-[1.35]"
               />
             </div>
           ))}
         </div>
 
-        <div className="lg:col-span-3 lg:justify-self-end">
+        <div className="lg:col-span-2 lg:justify-self-end">
           {/* Рабочий выбор языка: меню выпадает вверх, EN/RU */}
           <LanguageSwitcher locale={locale} dict={dict} variant="pill" />
         </div>
