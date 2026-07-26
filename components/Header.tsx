@@ -241,13 +241,7 @@ export default function Header({
         className="absolute inset-x-0 bottom-0 -z-10 h-px origin-left bg-black"
       />
 
-      {/* Грид auto|1fr|auto: логотип и меню занимают ровно свою ширину,
-          средняя колонка забирает остаток и центрирует в нём переключатель.
-          При нехватке места (открытые девтулзы, узкое окно) сжимается
-          именно средняя колонка — грид-дорожки не пересекаются, и элементы
-          физически не могут налезть друг на друга. min-w-0 разрешает
-          средней колонке сжиматься меньше содержимого. */}
-      <div className="grid h-[100px] grid-cols-[auto_1fr_auto] items-center gap-4 px-6 lg:px-10">
+      <div className="flex h-[100px] items-center justify-between px-6 lg:px-10">
         {/* На внутренних страницах логотип розовый (цвет круга с лендинга),
             но только наверху: при скролле на светлой шапке он снова
             тёмно-серый, как на лендинге. На главной — цвет темы шапки */}
@@ -262,15 +256,22 @@ export default function Header({
           .adswebai
         </Link>
 
-        {/* Средняя колонка отдана переключателю целиком: он центрируется
-            внутри неё, а её ширину меряет сам компонент, чтобы раскрытая
-            пилюля не вылезла за пределы своей грид-дорожки */}
-        <div data-nav-item className="relative h-[44px] min-w-0">
-          <LanguageSwitcher locale={locale} dict={dict} />
+        {/* Переключатель — по центру шапки, оверлеем во всю ширину:
+            justify-center пересчитывает центр на каждом кадре анимации
+            ширины. pointer-events-none у оверлея, чтобы он не перехватывал
+            клики у логотипа и меню под ним. Ширину раскрытой пилюли
+            ограничивает сам компонент — по зазору между логотипом и меню. */}
+        <div className="pointer-events-none absolute inset-x-0 top-[28px] z-40 flex justify-center">
+          <div data-nav-item className="pointer-events-auto">
+            <LanguageSwitcher locale={locale} dict={dict} />
+          </div>
         </div>
 
         <div className="flex items-center justify-end gap-10">
-          <ul className="fs-label hidden items-center gap-10 font-medium lg:flex">
+          <ul
+            data-header-nav
+            className="fs-label hidden items-center gap-10 font-medium lg:flex"
+          >
             {NAV.map((item) => (
               <li
                 key={item.label}

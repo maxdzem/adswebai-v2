@@ -6,7 +6,6 @@ import gsap from "gsap";
 import {
   LOCALES,
   LOCALE_LABEL,
-  DEFAULT_LOCALE,
   swapLocale,
   type Locale,
 } from "@/content/i18n";
@@ -16,6 +15,8 @@ import type { Dict } from "@/content/dict";
 const PILL_W = 268;
 /** Круг с шевроном (44px) + зазор — их место надо оставить свободным. */
 const CHEV_SPACE = 52;
+/** Запас до логотипа и меню, чтобы пилюля к ним не прижималась. */
+const SIDE_GAP = 24;
 /** Ниже этой ширины пилюля не раскрывается: незачем — текст всё равно
  *  не поместится, а раскрытие полезло бы на соседние элементы. */
 const PILL_MIN = 150;
@@ -48,53 +49,41 @@ function Chevron() {
 }
 
 /**
- * Панель выбора языка. Без флагов: слева название языка, справа —
- * статус перевода. Английский помечен как основной, остальные локали
- * честно подписаны как переведённые с помощью AI.
+ * Панель выбора языка: только названия, без флагов и подписей статуса.
+ * Активный язык выделен насыщенностью.
  */
 function Panel({
   locale,
-  dict,
   onPick,
 }: {
   locale: Locale;
-  dict: Dict;
   onPick: (l: Locale) => void;
 }) {
   return (
-    <ul className="px-6 py-3">
-        {LOCALES.map((l) => {
-          const active = l === locale;
-          return (
-            <li key={l}>
-              {/* Ховер: строка подсвечивается, название уезжает вправо,
-                  статус темнеет — видно, какой язык будет выбран */}
-              <button
-                data-lang-item
-                type="button"
-                onClick={() => onPick(l)}
-                className="group -mx-3 flex w-full items-baseline justify-between gap-8 rounded-[10px] px-3 py-2.5 text-left transition-colors duration-200 hover:bg-ink/[0.07]"
+    <ul className="p-2">
+      {LOCALES.map((l) => {
+        const active = l === locale;
+        return (
+          <li key={l}>
+            {/* Ховер: строка подсвечивается, название уезжает вправо —
+                видно, какой язык будет выбран */}
+            <button
+              data-lang-item
+              type="button"
+              onClick={() => onPick(l)}
+              className="group flex w-full rounded-[10px] px-4 py-2.5 text-left transition-colors duration-200 hover:bg-ink/[0.07]"
+            >
+              <span
+                className={`fs-body-m transition-transform duration-200 group-hover:translate-x-1.5 ${
+                  active ? "font-medium text-ink" : "text-ink/80"
+                }`}
               >
-                <span
-                  className={`fs-body-m transition-transform duration-200 group-hover:translate-x-1.5 ${
-                    active ? "font-medium text-ink" : "text-ink/80"
-                  }`}
-                >
-                  {LOCALE_LABEL[l]}
-                </span>
-                <span
-                  className={`fs-label shrink-0 transition-colors duration-200 group-hover:text-ink/70 ${
-                    active ? "text-ink/70" : "text-ink/45"
-                  }`}
-                >
-                  {l === DEFAULT_LOCALE
-                    ? dict.lang.isDefault
-                    : dict.lang.isTranslated}
-                </span>
-              </button>
-            </li>
-          );
-        })}
+                {LOCALE_LABEL[l]}
+              </span>
+            </button>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -159,10 +148,23 @@ export default function LanguageSwitcher({
     const ctx = gsap.context(() => {
       if (open) {
         if (variant === "dot") {
-          // Доступное место = ширина средней колонки минус круг с шевроном.
-          // Так пилюля никогда не вылезает за свою дорожку грида и не
-          // наезжает на логотип или меню, даже при открытых девтулзах.
-          const room = (rootRef.current?.offsetWidth ?? 0) - CHEV_SPACE;
+          // Переключатель центрирован оверлеем, поэтому меряем реальный
+          // зазор между логотипом и меню шапки: раскрытая пилюля растёт
+          // симметрично от центра, и наехать она может на любую из сторон.
+          // Берём минимальное из двух полурасстояний — так безопасно
+          // и при открытых девтулзах, и на промежуточных ширинах.
+          const header = rootRef.current?.closest("header");
+          const logo = header?.querySelector("[data-header-logo]");
+          const nav = header?.querySelector("[data-header-nav]");
+          const centre = (rootRef.current?.getBoundingClientRect().left ?? 0) +
+            (rootRef.current?.offsetWidth ?? 0) / 2;
+
+          const leftEdge = logo?.getBoundingClientRect().right ?? 0;
+          const rightEdge =
+            nav?.getBoundingClientRect().left ?? window.innerWidth;
+          const halfRoom = Math.min(centre - leftEdge, rightEdge - centre);
+          const room = (halfRoom - SIDE_GAP) * 2 - CHEV_SPACE;
+
           const target = Math.max(44, Math.min(PILL_W, room));
 
           gsap.to(pillRef.current, {
@@ -342,7 +344,7 @@ export default function LanguageSwitcher({
   };
 
   const panelClass =
-    "invisible absolute z-30 w-[min(380px,calc(100vw-3rem))] overflow-hidden rounded-[12px] border border-ink/15 bg-white text-ink opacity-0 shadow-[0_28px_60px_-20px_rgba(0,0,0,0.35)]";
+    "invisible absolute z-30 w-[min(220px,calc(100vw-3rem))] overflow-hidden rounded-[12px] border border-ink/15 bg-white text-ink opacity-0 shadow-[0_28px_60px_-20px_rgba(0,0,0,0.35)]";
 
   if (variant === "pill") {
     return (
@@ -352,7 +354,7 @@ export default function LanguageSwitcher({
           ref={panelRef}
           className={`${panelClass} right-0 top-[calc(100%+14px)]`}
         >
-          <Panel locale={locale} dict={dict} onPick={pick} />
+          <Panel locale={locale} onPick={pick} />
         </div>
 
         {/* Свёрнутое состояние: текущий язык + круг с шевроном */}
@@ -440,7 +442,7 @@ export default function LanguageSwitcher({
         ref={panelRef}
         className={`${panelClass} left-1/2 top-[62px] -translate-x-1/2`}
       >
-        <Panel locale={locale} dict={dict} onPick={pick} />
+        <Panel locale={locale} onPick={pick} />
       </div>
     </div>
   );
