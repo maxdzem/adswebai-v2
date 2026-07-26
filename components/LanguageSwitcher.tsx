@@ -350,7 +350,7 @@ export default function LanguageSwitcher({
         {/* Панель раскрывается вверх — футер стоит внизу страницы */}
         <div
           ref={panelRef}
-          className={`${panelClass} left-0 top-[calc(100%+14px)]`}
+          className={`${panelClass} right-0 top-[calc(100%+14px)]`}
         >
           <Panel locale={locale} dict={dict} onPick={pick} />
         </div>

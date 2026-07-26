@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import MediaSlot from "./MediaSlot";
 import Button from "./Button";
@@ -46,6 +47,29 @@ function Crumb({ trail }: { trail: { label: string; href: string }[] }) {
         ))}
       </ol>
     </nav>
+  );
+}
+
+/**
+ * Подсвечивает бренд в заголовке: «Об adswebai» → «Об .adswebai»,
+ * где .adswebai розовый — цвет круга с лендинга. Метаданные при этом
+ * остаются обычной строкой, разметка живёт только в h1.
+ */
+function BrandTitle({ text }: { text: string }) {
+  const parts = text.split("adswebai");
+  if (parts.length === 1) return <>{text}</>;
+
+  return (
+    <>
+      {parts.map((part, i) => (
+        <Fragment key={i}>
+          {part}
+          {i < parts.length - 1 && (
+            <span className="text-blush">.adswebai</span>
+          )}
+        </Fragment>
+      ))}
+    </>
   );
 }
 
@@ -263,7 +287,7 @@ export default function PageShell({
                     : "fs-display-s max-w-[26ch]"
                 }`}
               >
-                {page.title}
+                <BrandTitle text={page.title} />
               </h1>
             </FxUp>
             <FxUp delay={0.16}>

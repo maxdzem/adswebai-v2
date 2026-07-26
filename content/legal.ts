@@ -2,10 +2,9 @@
  * Корпоративные и юридические документы из футера.
  *
  * ВАЖНО про содержание: тексты этих документов имеют юридическую силу
- * (privacy notice, modern slavery statement) либо заявляют о присоединении
- * компании к внешним инициативам (Armed Forces Covenant). Придумывать их
- * нельзя: это были бы ложные заявления о том, как adswebai обращается
- * с данными и какие обязательства на себя взяла.
+ * (privacy notice, modern slavery statement) либо заявляют о принятых
+ * компанией обязательствах. Придумывать их нельзя: это были бы ложные
+ * заявления о том, как adswebai обращается с данными и что на себя взяла.
  *
  * Поэтому страницы существуют, имеют правильные заголовки, канонические
  * URL и объясняют предмет документа — а вместо выдуманного текста стоит
@@ -98,20 +97,6 @@ export const LEGAL_DOCS: LegalDoc[] = [
     title: "Accessibility Statement",
     purpose:
       "The accessibility standard we build to, where this site currently falls short, and how to tell us about a barrier you hit.",
-    group: "Commitments",
-  },
-  {
-    slug: "armed-forces-covenant",
-    title: "Armed Forces Covenant",
-    purpose:
-      "Our position on employing and supporting service leavers, reservists and military families.",
-    group: "Commitments",
-  },
-  {
-    slug: "land-acknowledgement",
-    title: "Land Acknowledgement",
-    purpose:
-      "Recognition of the traditional custodians of the land our teams work from.",
     group: "Commitments",
   },
 ];
