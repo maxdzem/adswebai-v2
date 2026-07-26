@@ -107,16 +107,16 @@ export default function Footer({ locale, dict }: { locale: Locale; dict: Dict })
           {dict.footer.keepExploring}
         </p>
 
-        {/* ml-[5cm]: крупные ссылки отодвинуты от левого края —
+        {/* ml-[11cm]: крупные ссылки отодвинуты от левого края —
             заодно точка-маркер (-left-6) перестаёт упираться в границу */}
-        <nav className="lg:col-span-3 lg:ml-[5cm]">
+        <nav className="lg:col-span-3 lg:ml-[11cm]">
           {BIG_LINKS.map((l) => (
             // Как пункты шапки: точка «падает» слева, слово подпрыгивает
             // (те же кейфреймы dot-in/dot-out/label-bounce из globals.css)
             <Link
               key={l.href}
               href={l.href}
-              className="nav-item relative block w-max py-1.5 text-[clamp(32px,26px+1.4vw,52px)] font-medium leading-[1.15] tracking-normal"
+              className="nav-item relative block w-max py-1.5 text-[clamp(36px,29px+1.6vw,58px)] font-medium leading-[1.15] tracking-normal"
             >
               <span
                 aria-hidden
@@ -127,11 +127,11 @@ export default function Footer({ locale, dict }: { locale: Locale; dict: Dict })
           ))}
         </nav>
 
-        {/* Колонка сдвинута вправо на 4cm (lg:ml-[4cm]). Ширина колонки
+        {/* Колонка сдвинута вправо на 6cm (lg:ml-[6cm]). Ширина колонки
             расширена до 6 из 12 — иначе длинные названия документов
             переносились бы после сдвига. Отступ только на lg: на мобильном
             колонка одна и сдвигать её некуда. */}
-        <div className="lg:col-span-6 lg:ml-[4cm]">
+        <div className="lg:col-span-6 lg:ml-[6cm]">
           {SMALL_LINKS.map((l) => (
             // Механика Connect: слово уезжает вправо, стрелка гаснет сзади
             // и её круг-дубль появляется ПЕРЕД словом

@@ -72,7 +72,7 @@ export default function AnimatedCircle({ dict }: { dict: Dict }) {
     <>
       {/* Статичный интро-блок: виден сразу, скроллится как обычный контент.
           Формат как в референсе: маленький лейбл + крупный жирный заголовок */}
-      <div className="bg-cream px-6 pb-0 pt-36 lg:px-10">
+      <div className="bg-cream px-6 pb-[2cm] pt-36 lg:px-10">
         <div className="lg:ml-[12%]">
           <p className="fs-label font-medium">{dict.circle.watch}</p>
           {/* Эталон типографики проекта: fs-display-m + type-display
@@ -92,9 +92,13 @@ export default function AnimatedCircle({ dict }: { dict: Dict }) {
         {/* overflow-hidden на самом sticky-элементе безопасен и запирает круг
             внутри секции. Углов нет: диагональ вьюпорта (≈1.41vmax) меньше
             диаметра круга (1.5vmax) — при scale:1 экран накрыт целиком */}
-        {/* pointer-events-none: снизу секция теперь перекрыта списком статей,
-            и прозрачный sticky-слой не должен перехватывать у него ховеры */}
-        <div className="pointer-events-none sticky top-0 h-screen overflow-hidden">
+        {/* БЕЗ overflow-hidden: он обрезал круг по верхней границе секции —
+            пока секция не прилипла, эта граница проходит посреди экрана,
+            и сверху был виден прямой срез. Теперь круг остаётся кругом
+            и, разрастаясь, накрывает заголовок, а затем и весь экран.
+            pointer-events-none: прозрачный слой не перехватывает ховеры
+            у списка статей, который подтянут под секцию. */}
+        <div className="pointer-events-none sticky top-0 h-screen">
           {/* Круг свёрстан в полном размере (резкие края), появляется из
               scale:0 — класс scale-0 держит его невидимым до гидрации */}
           {/* Точка рождения/схлопывания — 24% от верха экрана, сразу под
