@@ -2,7 +2,10 @@ import Link from "next/link";
 import MediaSlot from "./MediaSlot";
 import Button from "./Button";
 import { FxUp, FxSide, FxDrift } from "./Fx";
+import Footer from "./Footer";
 import type { ContentPage } from "@/content/site";
+import { href, type Locale } from "@/content/i18n";
+import type { Dict } from "@/content/dict";
 
 /**
  * Каркас внутренней страницы. Четыре макета, чтобы разделы не выглядели
@@ -226,12 +229,16 @@ export default function PageShell({
   trail,
   related,
   layout = "feature",
+  locale,
+  dict,
 }: {
   page: ContentPage;
   trail: { label: string; href: string }[];
   /** Соседние страницы того же раздела — внутренняя перелинковка для SEO. */
   related?: { label: string; href: string }[];
   layout?: ShellLayout;
+  locale: Locale;
+  dict: Dict;
 }) {
   const wideTitle = layout === "feature" || layout === "editorial";
   // Тон страницы задаётся макетом — разделы не читаются как один шаблон
@@ -290,7 +297,7 @@ export default function PageShell({
           {related && related.length > 0 && (
             <FxUp className="lg:ml-[12%]">
               <h2 className="fs-label font-medium text-ink/60">
-                Also in this area
+                {dict.common.alsoInThisArea}
               </h2>
               <ul className="mt-6 flex flex-wrap gap-x-8 gap-y-3">
                 {related.map((r) => (
@@ -310,12 +317,18 @@ export default function PageShell({
           <FxUp delay={0.1} className="mt-16 lg:ml-[12%]">
             {/* Тот же swap, что у Connect: Link даёт клиентскую навигацию,
                 Button внутри рендерится span'ом */}
-            <Link href="/contact" data-btn-hover className="inline-block">
-              <Button label="Start a conversation" href={null} />
+            <Link
+              href={href(locale, "/contact")}
+              data-btn-hover
+              className="inline-block"
+            >
+              <Button label={dict.common.startConversation} href={null} />
             </Link>
           </FxUp>
         </div>
       </article>
+
+      <Footer locale={locale} dict={dict} />
     </main>
   );
 }

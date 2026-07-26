@@ -2,7 +2,10 @@ import Link from "next/link";
 import MediaSlot from "./MediaSlot";
 import IconSwap from "./IconSwap";
 import { FxUp, FxSide, FxDrift } from "./Fx";
+import Footer from "./Footer";
 import type { ContentPage } from "@/content/site";
+import { href as L, type Locale } from "@/content/i18n";
+import type { Dict } from "@/content/dict";
 
 /**
  * Страница-указатель раздела. Два представления, чтобы /solutions
@@ -23,6 +26,8 @@ export default function IndexList({
   base,
   items,
   display = "cards",
+  locale,
+  dict,
 }: {
   eyebrow: string;
   title: string;
@@ -31,6 +36,8 @@ export default function IndexList({
   base: string;
   items: ContentPage[];
   display?: IndexDisplay;
+  locale: Locale;
+  dict: Dict;
 }) {
   return (
     // Разные тона у разделов: карточный вид (/solutions) — светлый cream,
@@ -68,7 +75,7 @@ export default function IndexList({
                     {/* Левая колонка въезжает слева, правая — справа */}
                     <FxSide side={i % 2 === 0 ? "left" : "right"}>
                       <Link
-                        href={`${base}/${p.slug}`}
+                        href={L(locale, `${base}/${p.slug}`)}
                         className="group block transition-opacity hover:opacity-70"
                       >
                         <MediaSlot ratio="4/3" />
@@ -98,7 +105,7 @@ export default function IndexList({
                   <FxUp>
                     {/* data-btn-hover: swap стрелки при ховере всей строки */}
                     <Link
-                      href={`${base}/${p.slug}`}
+                      href={L(locale, `${base}/${p.slug}`)}
                       data-btn-hover
                       className="group flex flex-col gap-2 py-7 transition-colors hover:bg-ink/[0.03] lg:flex-row lg:items-center lg:gap-10"
                     >
@@ -120,6 +127,8 @@ export default function IndexList({
           </div>
         )}
       </div>
+
+      <Footer locale={locale} dict={dict} />
     </main>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type MouseEvent } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Button from "./Button";
+import type { Dict } from "@/content/dict";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -58,7 +59,9 @@ const OFFSET_Y = -110;
 
 type Setter = (value: number) => void;
 
-export default function ArticlesList() {
+export default function ArticlesList({ dict }: { dict: Dict }) {
+  // Текст постов из словаря, градиенты превью остаются в POSTS
+  const posts = POSTS.map((p, i) => ({ ...p, ...dict.articles.posts[i] }));
   const sectionRef = useRef<HTMLElement>(null);
   const followerRef = useRef<HTMLDivElement>(null);
   const imgX = useRef<Setter | null>(null);
@@ -163,13 +166,13 @@ export default function ArticlesList() {
       className="-mt-[18cm] bg-cream px-6 pb-40 pt-28 text-ink lg:px-10"
     >
       <h2 data-list-heading className="type-display fs-display-m">
-        On our minds
+        {dict.articles.heading}
       </h2>
 
       {/* Разделитель 1px currentColor только МЕЖДУ статьями (divide-y):
           у последней строки линии нет. Текст на ховер не анимируется. */}
       <div data-list-rows className="mt-16 divide-y divide-current">
-        {POSTS.map((p) => (
+        {posts.map((p) => (
           <article
             key={p.bold}
             // data-btn-hover: ховер на ЛЮБОЙ части строки запускает
@@ -192,10 +195,10 @@ export default function ArticlesList() {
             </h3>
 
             <p className="fs-label w-32 shrink-0 font-normal">
-              {p.read} read
+              {p.read} {dict.common.minRead}
             </p>
 
-            <Button label="Read now" />
+            <Button label={dict.common.readNow} />
           </article>
         ))}
       </div>

@@ -4,22 +4,27 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import SwapLink from "./SwapLink";
 import LanguageSwitcher from "./LanguageSwitcher";
-import { LEGAL_DOCS } from "@/content/legal";
+import { getLegalDocs } from "@/content/resolve";
+import { href, type Locale } from "@/content/i18n";
+import type { Dict } from "@/content/dict";
 
-const BIG_LINKS = [
-  { label: "What We Do", href: "/what-we-do" },
-  { label: "Partners", href: "/partners" },
-  { label: "Work", href: "/work" },
-  { label: "Careers", href: "/about/careers" },
-  { label: "Thinking", href: "/thinking" },
-  { label: "Connect", href: "/contact" },
+const buildBigLinks = (locale: Locale, dict: Dict) => [
+  { label: dict.footer.links.whatWeDo, href: href(locale, "/what-we-do") },
+  { label: dict.footer.links.partners, href: href(locale, "/partners") },
+  { label: dict.footer.links.work, href: href(locale, "/work") },
+  { label: dict.footer.links.careers, href: href(locale, "/about/careers") },
+  { label: dict.footer.links.thinking, href: href(locale, "/thinking") },
+  { label: dict.footer.links.connect, href: href(locale, "/contact") },
 ];
 
 // Мелкие ссылки: «An adswebai Company» ведёт на About, остальные —
 // на реальные документы из content/legal.ts (порядок задаётся там же)
-const SMALL_LINKS: { label: string; href: string }[] = [
-  { label: "An adswebai Company", href: "/about" },
-  ...LEGAL_DOCS.map((d) => ({ label: d.title, href: `/legal/${d.slug}` })),
+const buildSmallLinks = (locale: Locale, dict: Dict) => [
+  { label: dict.footer.company, href: href(locale, "/about") },
+  ...getLegalDocs(locale).map((d) => ({
+    label: d.title,
+    href: href(locale, `/legal/${d.slug}`),
+  })),
 ];
 
 function Arrow({ size = 12 }: { size?: number }) {
@@ -82,7 +87,9 @@ const SOCIALS: { label: string; icon: React.ReactNode }[] = [
   },
 ];
 
-export default function Footer() {
+export default function Footer({ locale, dict }: { locale: Locale; dict: Dict }) {
+  const BIG_LINKS = buildBigLinks(locale, dict);
+  const SMALL_LINKS = buildSmallLinks(locale, dict);
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
@@ -96,7 +103,7 @@ export default function Footer() {
     // Фон футера — #191715 (глубже основного ink, как в референсе)
     <footer className="bg-[#191715] px-6 pb-10 pt-20 text-cream lg:px-10">
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-12">
-        <p className="fs-label text-white/60 lg:col-span-2">Keep Exploring...</p>
+        <p className="fs-label text-white/60 lg:col-span-2">{dict.footer.keepExploring}</p>
 
         <nav className="lg:col-span-3">
           {BIG_LINKS.map((l) => (
@@ -136,7 +143,7 @@ export default function Footer() {
 
         <div className="lg:col-span-3 lg:justify-self-end">
           {/* Рабочий выбор языка: меню выпадает вверх, EN/RU */}
-          <LanguageSwitcher variant="pill" />
+          <LanguageSwitcher locale={locale} dict={dict} variant="pill" />
         </div>
       </div>
 
@@ -155,25 +162,25 @@ export default function Footer() {
               </a>
             ))}
           </div>
-          <span className="fs-label text-white/80">Follow Us</span>
+          <span className="fs-label text-white/80">{dict.footer.followUs}</span>
         </div>
 
         {subscribed ? (
-          <p className="fs-label text-white/60">You’re on the list. 👋</p>
+          <p className="fs-label text-white/60">{dict.footer.subscribed}</p>
         ) : (
           <form onSubmit={onSubscribe} className="group flex items-center gap-3">
-            <span className="fs-label font-medium">Newsletter</span>
+            <span className="fs-label font-medium">{dict.footer.newsletter}</span>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email address"
+              placeholder={dict.footer.emailPlaceholder}
               className="fs-label w-60 border-b border-white/40 bg-transparent py-2 placeholder:text-white/50 focus:border-white focus:outline-none"
             />
             {/* ИЗМЕНЕНО: hover — стрелка подписки уезжает вправо, фон меняет оттенок */}
             <button
               type="submit"
-              aria-label="Subscribe"
+              aria-label={dict.footer.subscribe}
               className="grid h-10 w-10 place-items-center rounded-full bg-cream text-ink transition-all duration-300 hover:translate-x-1 hover:bg-white"
             >
               <Arrow />
@@ -182,7 +189,7 @@ export default function Footer() {
         )}
 
         <p className="fs-label text-white/50">
-          Copyright 2026 <span className="font-bold text-white/80">adswebai</span>
+          {dict.footer.copyright} <span className="font-bold text-white/80">adswebai</span>
         </p>
       </div>
     </footer>

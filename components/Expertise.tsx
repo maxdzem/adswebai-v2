@@ -6,6 +6,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import SwapLink from "./SwapLink";
 
+import type { Dict } from "@/content/dict";
+import { href, type Locale } from "@/content/i18n";
+
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 function Arrow() {
@@ -22,7 +25,7 @@ function Arrow() {
   );
 }
 
-export default function Expertise() {
+export default function Expertise({ dict }: { dict: Dict }) {
   const ref = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -58,7 +61,7 @@ export default function Expertise() {
         data-exp-heading
         className="type-display fs-display-m"
       >
-        Our Expertise
+        {dict.expertise.heading}
       </h2>
 
       <div className="mt-16 grid grid-cols-1 gap-x-6 gap-y-16 lg:grid-cols-12">
@@ -78,9 +81,9 @@ export default function Expertise() {
               </span>
             </p>
           </div>
-          <p className="fs-label mt-5 font-medium text-ink/80">Case Study</p>
+          <p className="fs-label mt-5 font-medium text-ink/80">{dict.expertise.caseStudy}</p>
           <h3 className="fs-body-m mt-2 font-bold leading-[1.15] tracking-normal">
-            <SwapLink label="Boomtown Unboxed" href={null} size={32} iconSize={12} />
+            <SwapLink label={dict.expertise.boomtown} href={null} size={32} iconSize={12} />
           </h3>
         </article>
 
@@ -93,10 +96,10 @@ export default function Expertise() {
                 "linear-gradient(160deg, #ff4fd8 0%, #b14dff 60%, #4f2be8 100%)",
             }}
           />
-          <p className="fs-label mt-5 font-medium text-ink/80">Report</p>
+          <p className="fs-label mt-5 font-medium text-ink/80">{dict.expertise.report}</p>
           <h3 className="fs-body-m mt-2 font-bold leading-[1.25] tracking-normal">
             <SwapLink
-              label="Owning the Answer: The Marketer’s Playbook for AEO, GEO and the AI Search Era"
+              label={dict.expertise.owningAnswer}
               href={null}
               size={32}
               iconSize={12}
@@ -115,10 +118,10 @@ export default function Expertise() {
             loop
             playsInline
           />
-          <p className="fs-label mt-5 font-medium text-ink/80">Content</p>
+          <p className="fs-label mt-5 font-medium text-ink/80">{dict.expertise.content}</p>
           <h3 className="fs-body-m mt-2 font-bold leading-[1.25] tracking-normal">
             <SwapLink
-              label="Smarter Investments for an Evolving Marketing Landscape"
+              label={dict.expertise.smarter}
               href={null}
               size={32}
               iconSize={12}

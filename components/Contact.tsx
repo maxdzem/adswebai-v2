@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import type { Dict } from "@/content/dict";
+
 gsap.registerPlugin(ScrollTrigger);
 
 type Step =
@@ -18,38 +20,34 @@ type Step =
     };
 
 // Порядок шагов — как в раскадровке
-const STEPS: Step[] = [
-  { name: "firstName", label: "First Name*", type: "text", required: true },
-  { name: "lastName", label: "Last Name*", type: "text", required: true },
-  { name: "company", label: "Company*", type: "text", required: true },
-  { name: "jobTitle", label: "Job Title*", type: "text", required: true },
-  { name: "email", label: "Work Email*", type: "email", required: true },
+function buildSteps(dict: Dict): Step[] {
+  return [
+  { name: "firstName", label: dict.contact.steps.firstName, type: "text", required: true },
+  { name: "lastName", label: dict.contact.steps.lastName, type: "text", required: true },
+  { name: "company", label: dict.contact.steps.company, type: "text", required: true },
+  { name: "jobTitle", label: dict.contact.steps.jobTitle, type: "text", required: true },
+  { name: "email", label: dict.contact.steps.email, type: "email", required: true },
   {
     name: "message",
-    label: "How can we help you?",
+    label: dict.contact.steps.message,
     type: "textarea",
     required: false,
   },
   {
     name: "region",
-    label: "Select a Region*",
+    label: dict.contact.steps.region,
     type: "radio",
     required: true,
-    options: [
-      "North America",
-      "Latin America",
-      "Asia Pacific",
-      "Europe, the Middle East, and Africa",
-      "Global",
-    ],
+    options: [...dict.contact.regions],
   },
   {
     name: "discover",
-    label: "How did you discover adswebai?*",
+    label: dict.contact.steps.discover,
     type: "textarea",
     required: true,
   },
-];
+  ];
+}
 
 function ArrowIcon() {
   return (
@@ -73,7 +71,9 @@ function SendIcon() {
   );
 }
 
-export default function Contact() {
+export default function Contact({ dict }: { dict: Dict }) {
+  // Шаги формы собираются из словаря: подписи и варианты регионов
+  const STEPS = buildSteps(dict);
   const sectionRef = useRef<HTMLElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
@@ -208,7 +208,7 @@ export default function Contact() {
           data-contact-el
           className="type-display fs-display-m max-w-[14ch]"
         >
-          Let’s unlock what’s possible together.
+          {dict.contact.heading}
         </h2>
 
         <div className="relative">
@@ -223,11 +223,11 @@ export default function Contact() {
             </div>
             <div data-contact-bubble className="relative mt-10">
               <div className="fs-body-m max-w-md rounded-2xl bg-grape p-5 leading-relaxed text-white">
-                Hey 👋
+                {dict.contact.greeting}
                 <br />
                 {sent
-                  ? "Thanks! Our team will get in touch with you shortly."
-                  : "Please fill out the following quick questions so our team can get in touch with you."}
+                  ? dict.contact.thanks
+                  : dict.contact.intro}
               </div>
               <span className="absolute -bottom-4 -left-6 h-3.5 w-3.5 rounded-full bg-grape" />
             </div>
@@ -242,7 +242,7 @@ export default function Contact() {
               <div ref={fieldRef}>
                 {sent ? (
                   <p className="fs-body-m py-6 text-ink">
-                    Your message is on its way. 👋
+                    {dict.contact.sent}
                   </p>
                 ) : current.type === "radio" ? (
                   <>
@@ -326,7 +326,7 @@ export default function Contact() {
               {!sent && (
                 <button
                   type="submit"
-                  aria-label={isLast ? "Send" : "Next"}
+                  aria-label={isLast ? dict.contact.send : dict.contact.next}
                   className={`grid h-[72px] w-[72px] place-items-center rounded-full shadow-[0_10px_30px_-16px_rgba(45,45,45,0.6)] transition-all duration-300 ${
                     isLast
                       ? "bg-ink text-white hover:scale-105"

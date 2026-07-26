@@ -8,51 +8,57 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Button from "./Button";
 import LanguageSwitcher from "./LanguageSwitcher";
-import { SOLUTIONS, SERVICES } from "@/content/site";
+import { getSolutions, getServices } from "@/content/resolve";
+import { href, type Locale } from "@/content/i18n";
+import type { Dict } from "@/content/dict";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-// Пункты и подменю (Solutions — 4, Marketing Services — 9, About Us — 5).
-// Подпункты собираются из того же контент-модуля, что рендерит страницы:
-// добавил решение/услугу в content/site.ts — оно само появилось в меню,
-// и ссылка гарантированно ведёт на существующий роут.
+// Пункты и подменю. Подпункты собираются из того же контент-модуля,
+// что рендерит страницы: добавил решение/услугу — оно само появилось
+// в меню, и ссылка гарантированно ведёт на существующий роут.
+// Все href прогоняются через href(locale, ...) — префикс языка в URL.
 type NavItem = {
   label: string;
   href: string;
   submenu?: { label: string; href: string }[];
 };
 
-const NAV: NavItem[] = [
-  {
-    label: "Solutions",
-    href: "/solutions",
-    submenu: SOLUTIONS.map((p) => ({
-      label: p.title,
-      href: `/solutions/${p.slug}`,
-    })),
-  },
-  {
-    label: "Marketing Services",
-    href: "/services",
-    submenu: SERVICES.map((p) => ({
-      label: p.title,
-      href: `/services/${p.slug}`,
-    })),
-  },
-  { label: "Technology Services", href: "/technology-services" },
-  { label: "Work", href: "/work" },
-  {
-    label: "About Us",
-    href: "/about",
-    submenu: [
-      { label: "Our Story", href: "/about" },
-      { label: "Leadership", href: "/about/leadership" },
-      { label: "Careers", href: "/about/careers" },
-      { label: "Newsroom", href: "/about/newsroom" },
-      { label: "Contact", href: "/contact" },
-    ],
-  },
-];
+function buildNav(locale: Locale, dict: Dict): NavItem[] {
+  const L = (p: string) => href(locale, p);
+
+  return [
+    {
+      label: dict.nav.solutions,
+      href: L("/solutions"),
+      submenu: getSolutions(locale).map((p) => ({
+        label: p.title,
+        href: L(`/solutions/${p.slug}`),
+      })),
+    },
+    {
+      label: dict.nav.services,
+      href: L("/services"),
+      submenu: getServices(locale).map((p) => ({
+        label: p.title,
+        href: L(`/services/${p.slug}`),
+      })),
+    },
+    { label: dict.nav.technology, href: L("/technology-services") },
+    { label: dict.nav.work, href: L("/work") },
+    {
+      label: dict.nav.about,
+      href: L("/about"),
+      submenu: [
+        { label: dict.nav.aboutSub.story, href: L("/about") },
+        { label: dict.nav.aboutSub.leadership, href: L("/about/leadership") },
+        { label: dict.nav.aboutSub.careers, href: L("/about/careers") },
+        { label: dict.nav.aboutSub.newsroom, href: L("/about/newsroom") },
+        { label: dict.nav.aboutSub.contact, href: L("/contact") },
+      ],
+    },
+  ];
+}
 
 function Chevron() {
   return (
@@ -75,7 +81,14 @@ function Chevron() {
   );
 }
 
-export default function Header() {
+export default function Header({
+  locale,
+  dict,
+}: {
+  locale: Locale;
+  dict: Dict;
+}) {
+  const NAV = buildNav(locale, dict);
   const ref = useRef<HTMLElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
   const lineRef = useRef<HTMLDivElement>(null);
@@ -86,7 +99,8 @@ export default function Header() {
   // поэтому разовая проверка DOM при маунте «залипала» на первом значении —
   // из-за этого на внутренних страницах логотип не розовел.
   const pathname = usePathname();
-  const darkHero = pathname === "/";
+  // Тёмный видео-герой есть только на главной каждой локали
+  const darkHero = pathname === href(locale);
 
   useGSAP(
     () => {
@@ -236,9 +250,9 @@ export default function Header() {
             но только наверху: при скролле на светлой шапке он снова
             тёмно-серый, как на лендинге. На главной — цвет темы шапки */}
         <Link
-          href="/"
+          href={href(locale)}
           data-nav-item
-          aria-label="adswebai — home"
+          aria-label={dict.nav.home}
           className={`justify-self-start text-[32px] font-black tracking-normal transition-colors duration-300 ${
             darkHero || scrolled ? "" : "text-blush"
           }`}
@@ -249,7 +263,7 @@ export default function Header() {
         {/* Якорь 44×44 для шторки: сама шторка позиционируется абсолютно
             от его центра, поэтому раскрытие не двигает соседние колонки */}
         <div data-nav-item className="relative h-[44px] w-[44px] justify-self-center">
-          <LanguageSwitcher />
+            <LanguageSwitcher locale={locale} dict={dict} />
         </div>
 
         <div className="flex items-center justify-end gap-10">
@@ -308,13 +322,18 @@ export default function Header() {
 
           {/* Connect: та же swap-анимация, что у «Read now»;
               ховер-зона — вся ссылка (data-btn-hover) */}
-          <Link href="/contact" data-btn-hover data-nav-item className="block">
+          <Link
+            href={href(locale, "/contact")}
+            data-btn-hover
+            data-nav-item
+            className="block"
+          >
             {/* На светлой шапке: область #222824, надпись и стрелка белые.
                 На прозрачной поверх тёмного видео — кремовая с тёмным текстом.
                 На прозрачной поверх светлой страницы кремовая кнопка утонула
                 бы в фоне, поэтому там тоже тёмная. */}
             <Button
-              label="Connect"
+              label={dict.nav.connect}
               href={null}
               colorClass={
                 scrolled || !darkHero

@@ -5,9 +5,11 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 
+import type { Dict } from "@/content/dict";
+
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-export default function AnimatedCircle() {
+export default function AnimatedCircle({ dict }: { dict: Dict }) {
   const wrapperRef = useRef<HTMLElement>(null);
   const circleRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -72,12 +74,11 @@ export default function AnimatedCircle() {
           Формат как в референсе: маленький лейбл + крупный жирный заголовок */}
       <div className="bg-cream px-6 pb-0 pt-36 lg:px-10">
         <div className="lg:ml-[12%]">
-          <p className="fs-label font-medium">Watch</p>
+          <p className="fs-label font-medium">{dict.circle.watch}</p>
           {/* Эталон типографики проекта: fs-display-m + type-display
               (900 / lh 1.15 / letter-spacing normal / цвет --color-ink) */}
           <h2 className="type-display fs-display-m mt-5 max-w-[42ch]">
-            Maxim Dzemidovich shares how brands can use first-party data to
-            achieve personalization at a massive scale.
+            {dict.circle.heading}
           </h2>
         </div>
       </div>
@@ -122,10 +123,10 @@ export default function AnimatedCircle() {
 
             <div className="absolute left-[8vw] top-[63%] lg:left-[14vw]">
               <span className="fs-label inline-block rounded-[50%] border border-ink/70 px-5 py-2 font-medium">
-                Meet
+                {dict.circle.meet}
               </span>
-              <p className="fs-body-m mt-4 font-semibold">adswebai.flow</p>
-              <p className="fs-body-m text-ink/50">Always-on AI Agents</p>
+              <p className="fs-body-m mt-4 font-semibold">{dict.circle.flow}</p>
+              <p className="fs-body-m text-ink/50">{dict.circle.agents}</p>
             </div>
 
             {/* video-mask из аудита: круг с overflow-hidden, масштабируется
@@ -143,7 +144,7 @@ export default function AnimatedCircle() {
                 playsInline
               />
               <button
-                aria-label="Play"
+                aria-label={dict.circle.play}
                 className="absolute left-1/2 top-1/2 grid h-[70px] w-[70px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-black/40 text-white backdrop-blur-sm"
               >
                 <svg width="14" height="16" viewBox="0 0 14 16" fill="none" aria-hidden>

@@ -4,10 +4,11 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import type { Dict } from "@/content/dict";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-export default function Hero() {
+export default function Hero({ dict }: { dict: Dict }) {
   const ref = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -68,13 +69,13 @@ export default function Hero() {
       <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center text-white">
         <h1 className="type-display">
           <span data-hero-line className="fs-display-l block font-black">
-            Transforming brands
+            {dict.hero.line1}
           </span>
           <span
             data-hero-line
             className="fs-display-l block font-serif font-medium tracking-normal"
           >
-            for the real-time world
+            {dict.hero.line2}
           </span>
         </h1>
       </div>
@@ -84,7 +85,7 @@ export default function Hero() {
         className="absolute bottom-12 left-1/2 z-10 -translate-x-1/2 text-white"
       >
         <span data-cue-label className="fs-body-l inline-block font-serif italic tracking-wide">
-          Scroll
+          {dict.hero.scroll}
         </span>
         <svg
           data-cue-arrow

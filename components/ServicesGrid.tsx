@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import SwapLink from "./SwapLink";
+import type { Dict } from "@/content/dict";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -57,7 +58,10 @@ function Arrow() {
   );
 }
 
-export default function ServicesGrid() {
+export default function ServicesGrid({ dict }: { dict: Dict }) {
+  // Тексты карточек берутся из словаря, визуал (градиенты, пропорции,
+  // вертикальные сдвиги) остаётся в SERVICES
+  const cards = SERVICES.map((s, i) => ({ ...s, ...dict.services.cards[i] }));
   const ref = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -94,12 +98,11 @@ export default function ServicesGrid() {
         data-services-heading
         className="type-display fs-display-m max-w-[62ch]"
       >
-        Your trusted partner for innovation across four strategic service
-        offerings:
+        {dict.services.heading}
       </h2>
 
       <div className="mt-20 grid grid-cols-1 gap-x-6 gap-y-16 sm:grid-cols-2 lg:grid-cols-4">
-        {SERVICES.map((s) => (
+        {cards.map((s) => (
           // data-btn-hover: ховер на любой части карточки запускает
           // swap-анимацию стрелки в заголовке
           <article
@@ -121,7 +124,9 @@ export default function ServicesGrid() {
               />
             </div>
 
-            <p className="fs-label mt-6 font-medium text-ink/80">Solutions</p>
+            <p className="fs-label mt-6 font-medium text-ink/80">
+              {dict.services.label}
+            </p>
 
             {/* Механика Connect: слово уезжает вправо, круг-стрелка
                 появляется перед словом. Ховер-зона — вся карточка */}

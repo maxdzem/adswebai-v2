@@ -6,9 +6,12 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import Button from "./Button";
 
+import type { Dict } from "@/content/dict";
+import { href, type Locale } from "@/content/i18n";
+
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-export default function AiIntro() {
+export default function AiIntro({ dict }: { dict: Dict }) {
   const ref = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -62,17 +65,17 @@ export default function AiIntro() {
       {/* Connect / What can we do for you? */}
       <div data-ai-block className="grid grid-cols-1 gap-10 lg:grid-cols-12">
         <div className="lg:col-span-3 lg:col-start-2">
-          <p className="fs-label font-medium">Connect</p>
+          <p className="fs-label font-medium">{dict.ai.connect}</p>
           <div className="mt-16">
             {/* Та же swap-анимация, что у Connect в шапке */}
-            <Button label="Reach out" href="#connect" />
+            <Button label={dict.ai.reachOut} href="#connect" />
           </div>
         </div>
         <div className="lg:col-span-8">
           <h2 className="type-display fs-display-m">
-            What can we do for{" "}
+            {dict.ai.question}{" "}
             <span className="relative inline-block">
-              you
+              {dict.ai.questionYou}
               <svg
                 className="pointer-events-none absolute -left-[14%] -top-[18%] h-[136%] w-[132%]"
                 viewBox="0 0 200 100"
@@ -103,16 +106,15 @@ export default function AiIntro() {
         className="mt-56 grid grid-cols-1 gap-10 lg:grid-cols-12"
       >
         <div className="lg:col-span-3">
-          <p className="fs-label font-medium">Our Agents</p>
+          <p className="fs-label font-medium">{dict.ai.ourAgents}</p>
         </div>
         <div className="lg:col-span-7">
           <h3 className="type-display fs-display-m">
-            Your always-on agents for last-mile intelligence — rapid, real, and
-            powered by adswebai.flow
+            {dict.ai.agentsHeading}
           </h3>
           <div className="mt-12 lg:pl-[14%]">
             {/* Та же swap-анимация, что у Connect в шапке */}
-            <Button label="Explore adswebai.flow" href="#" />
+            <Button label={dict.ai.explore} href="#" />
           </div>
         </div>
       </div>

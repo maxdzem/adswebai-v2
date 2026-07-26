@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import gsap from "gsap";
+import { LOCALE_LABEL, swapLocale, type Locale } from "@/content/i18n";
+import type { Dict } from "@/content/dict";
 
-// Пока без локалей — только выбор языка в UI. Языки: EN и RU.
-const LANGS = [
-  { code: "en", name: "English", Flag: FlagUS },
-  { code: "ru", name: "Русский", Flag: FlagRU },
+// Переключение реально меняет локаль в URL, сохраняя текущую страницу
+const LANGS: { code: Locale; name: string; Flag: () => React.ReactElement }[] = [
+  { code: "en", name: LOCALE_LABEL.en, Flag: FlagUS },
+  { code: "ru", name: LOCALE_LABEL.ru, Flag: FlagRU },
 ];
 
 const COLLAPSED = 44;
@@ -112,8 +115,12 @@ function useOutsideClose(
  *    выпадает ВВЕРХ тем же дизайном (тёмная панель, флаги, подсветка)
  */
 export default function LanguageSwitcher({
+  locale,
+  dict,
   variant = "dot",
 }: {
+  locale: Locale;
+  dict: Dict;
   variant?: "dot" | "pill";
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -123,7 +130,11 @@ export default function LanguageSwitcher({
   const tlRef = useRef<gsap.core.Timeline | null>(null);
 
   const [open, setOpen] = useState(false);
-  const [active, setActive] = useState("en");
+  const router = useRouter();
+  const pathname = usePathname();
+  // Активный язык берётся из URL, а не из локального стейта —
+  // он остаётся верным при прямом заходе и при навигации назад
+  const active = locale;
 
   useOutsideClose(open, rootRef, () => setOpen(false));
 
@@ -227,9 +238,11 @@ export default function LanguageSwitcher({
     }
   }, [open, variant]);
 
-  const pick = (code: string) => {
-    setActive(code);
+  const pick = (code: Locale) => {
     setOpen(false);
+    if (code === locale) return;
+    // Переходим на ту же страницу в другой локали
+    router.push(swapLocale(pathname, code));
   };
 
   if (variant === "pill") {
@@ -257,7 +270,7 @@ export default function LanguageSwitcher({
           // Ховер заметный: пилюля заливается кремовым и инвертирует текст
           className="fs-label group inline-flex items-center gap-3 rounded-full border border-white/30 px-5 py-2.5 transition-colors duration-300 hover:border-cream hover:bg-cream hover:text-ink"
         >
-          Choose your language
+          {dict.lang.choose}
           {/* Стрелка указывает НАВЕРХ (-90°) — меню раскрывается вверх;
               в открытом состоянии переворачивается вниз, на «свернуть» */}
           <span
@@ -292,7 +305,7 @@ export default function LanguageSwitcher({
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          aria-label="Change language"
+          aria-label={dict.lang.change}
           aria-expanded={open}
           className={`absolute left-0 top-0 z-10 grid h-[44px] w-[44px] place-items-center ${
             open ? "pointer-events-none" : ""
