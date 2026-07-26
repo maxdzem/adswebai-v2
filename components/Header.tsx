@@ -60,6 +60,42 @@ function buildNav(locale: Locale, dict: Dict): NavItem[] {
   ];
 }
 
+/** Шеврон вниз в кружке — раскрывает подменю в мобильном меню. */
+function ChevronDown({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+      className={`transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+    >
+      <path
+        d="m6 9 6 6 6-6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ArrowRight() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <path
+        d="M1 7h11m0 0L7.5 2.5M12 7l-4.5 4.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function Chevron() {
   return (
     <svg
@@ -93,7 +129,11 @@ export default function Header({
   const bgRef = useRef<HTMLDivElement>(null);
   const lineRef = useRef<HTMLDivElement>(null);
   const tvRef = useRef<gsap.core.Timeline | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  // Какой пункт мобильного меню раскрыт (одновременно только один)
+  const [openSub, setOpenSub] = useState<string | null>(null);
   // Тёмный видео-герой есть только на главной. Определяем ПО МАРШРУТУ:
   // шапка живёт в layout и не перемонтируется при клиентских переходах,
   // поэтому разовая проверка DOM при маунте «залипала» на первом значении —
@@ -209,6 +249,80 @@ export default function Header({
     else tv.play();
   }, [scrolled]);
 
+  // Мобильное меню: эллиптическая маска раскрывается из точки у бургера,
+  // пункты подтягиваются каскадом. Прокрутка страницы под оверлеем
+  // блокируется классом lenis-stopped — он уже описан в globals.css
+  // и корректно останавливает именно Lenis, а не только нативный скролл.
+  useEffect(() => {
+    const el = menuRef.current;
+    if (!el) return;
+
+    const ctx = gsap.context(() => {
+      if (menuOpen) {
+        gsap.set(el, { visibility: "visible" });
+        gsap.to(el, {
+          "--m-rx": "150%",
+          "--m-ry": "150%",
+          duration: 0.75,
+          ease: "power3.inOut",
+          overwrite: "auto",
+        });
+        gsap.to(el, {
+          "--m-cx": "50%",
+          "--m-cy": "45%",
+          duration: 0.8,
+          ease: "back.out(0.5)",
+          overwrite: "auto",
+        });
+        gsap.fromTo(
+          "[data-menu-item]",
+          { autoAlpha: 0, y: 24 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.5,
+            stagger: 0.06,
+            delay: 0.18,
+            ease: "power3.out",
+            overwrite: "auto",
+          }
+        );
+      } else {
+        gsap.to("[data-menu-item]", {
+          autoAlpha: 0,
+          y: 16,
+          duration: 0.2,
+          ease: "power2.in",
+          overwrite: "auto",
+        });
+        gsap.to(el, {
+          "--m-rx": "0%",
+          "--m-ry": "0%",
+          "--m-cx": "88%",
+          "--m-cy": "4%",
+          duration: 0.5,
+          delay: 0.08,
+          ease: "power3.inOut",
+          overwrite: "auto",
+          onComplete: () => gsap.set(el, { visibility: "hidden" }),
+        });
+      }
+    }, menuRef);
+
+    if (!menuOpen) setOpenSub(null);
+    document.documentElement.classList.toggle("lenis-stopped", menuOpen);
+
+    return () => {
+      ctx.revert();
+      document.documentElement.classList.remove("lenis-stopped");
+    };
+  }, [menuOpen]);
+
+  // Переход по ссылке не должен оставлять оверлей открытым
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
   return (
     // Сам header всегда прозрачный: светлое полотно и линия — отдельные
     // слои-«кинескопы» (bgRef/lineRef), которыми управляет tvOff-таймлайн.
@@ -256,18 +370,20 @@ export default function Header({
           .adswebai
         </Link>
 
-        {/* Переключатель — по центру шапки, оверлеем во всю ширину:
-            justify-center пересчитывает центр на каждом кадре анимации
-            ширины. pointer-events-none у оверлея, чтобы он не перехватывал
-            клики у логотипа и меню под ним. Ширину раскрытой пилюли
-            ограничивает сам компонент — по зазору между логотипом и меню. */}
-        <div className="pointer-events-none absolute inset-x-0 top-[28px] z-40 flex justify-center">
-          <div data-nav-item className="pointer-events-auto">
-            <LanguageSwitcher locale={locale} dict={dict} />
-          </div>
+        {/* Переключатель — не оверлеем, а полноценным flex-элементом:
+            flex-1 забирает весь свободный зазор между логотипом и меню,
+            justify-center держит точку в его середине. Когда меню шире
+            (или окно уже — открытые девтулзы), зазор сжимается и точка
+            уезжает вместе с ним. Наехать на «Решения» она уже не может:
+            это соседние элементы одной строки, а не наложенные слои. */}
+        <div
+          data-nav-item
+          className="hidden min-w-0 flex-1 justify-center px-4 lg:flex"
+        >
+          <LanguageSwitcher locale={locale} dict={dict} />
         </div>
 
-        <div className="flex items-center justify-end gap-10">
+        <div className="flex shrink-0 items-center gap-10">
           <ul
             data-header-nav
             className="fs-label hidden items-center gap-10 font-medium lg:flex"
@@ -346,6 +462,158 @@ export default function Header({
               }
             />
           </Link>
+
+          {/* Бургер — только на мобильных. По референсу: три линии 34px,
+              hit-area 48×48, переход .3s cubic-bezier(.455,.03,.515,.955).
+              В открытом состоянии складывается в крестик. */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label={menuOpen ? dict.nav.menuClose : dict.nav.menuOpen}
+            aria-expanded={menuOpen}
+            data-nav-item
+            className="relative z-50 h-[20px] w-[40px] shrink-0 after:absolute after:-inset-x-[4px] after:-inset-y-[14px] after:content-[''] lg:hidden"
+          >
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                aria-hidden
+                className={`absolute left-1/2 h-[1.5px] w-[34px] -translate-x-1/2 bg-current transition-transform duration-300 ease-[cubic-bezier(0.455,0.03,0.515,0.955)] ${
+                  i === 0 ? "top-0" : i === 1 ? "top-1/2 -translate-y-1/2" : "bottom-0"
+                } ${
+                  menuOpen
+                    ? i === 0
+                      ? "translate-y-[9px] rotate-45"
+                      : i === 1
+                        ? "scale-x-0"
+                        : "-translate-y-[9px] -rotate-45"
+                    : ""
+                }`}
+              />
+            ))}
+          </button>
+        </div>
+      </div>
+
+      {/* Мобильный оверлей: раскрывается эллиптической маской из точки
+          у бургера — приём из референса. Радиусы и центр лежат в CSS-
+          переменных, их анимирует GSAP. Список по центру экрана, как
+          в референсе: крупные строки с кружком справа — шеврон у пунктов
+          с подменю, стрелка у прямых ссылок. */}
+      <div
+        ref={menuRef}
+        className="invisible fixed inset-0 z-40 flex flex-col justify-center overflow-y-auto bg-[#191715] px-6 text-cream lg:hidden"
+        style={{
+          clipPath:
+            "ellipse(var(--m-rx, 0%) var(--m-ry, 0%) at var(--m-cx, 88%) var(--m-cy, 4%))",
+        }}
+      >
+        {/* Подпись «Меню» слева сверху — крестик справа делает сам бургер,
+            он лежит выше оверлея по z-index и складывается в X */}
+        <span
+          data-menu-item
+          className="fs-label absolute left-6 top-[38px] font-medium"
+        >
+          {dict.nav.menu}
+        </span>
+
+        <nav>
+          <ul>
+            {NAV.map((item) => {
+              const expanded = openSub === item.label;
+
+              return (
+                <li
+                  key={item.label}
+                  data-menu-item
+                  className="border-b border-cream/15"
+                >
+                  <div className="flex items-center justify-between gap-4 py-5">
+                    <Link
+                      href={item.href}
+                      onClick={() => setMenuOpen(false)}
+                      className="text-[30px] font-bold leading-[1.1] tracking-normal"
+                    >
+                      {item.label}
+                    </Link>
+
+                    {item.submenu ? (
+                      <button
+                        type="button"
+                        onClick={() => setOpenSub(expanded ? null : item.label)}
+                        aria-expanded={expanded}
+                        aria-label={item.label}
+                        className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/10 transition-colors duration-300 hover:bg-white/15"
+                      >
+                        <ChevronDown open={expanded} />
+                      </button>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        onClick={() => setMenuOpen(false)}
+                        aria-hidden
+                        tabIndex={-1}
+                        className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/10 transition-colors duration-300 hover:bg-white/15"
+                      >
+                        <ArrowRight />
+                      </Link>
+                    )}
+                  </div>
+
+                  {/* Аккордеон на grid-rows: высота едет плавно, без замера
+                      контента и без прыжка от display:none */}
+                  {item.submenu && (
+                    <div
+                      className={`grid overflow-hidden transition-all duration-300 ease-out ${
+                        expanded ? "grid-rows-[1fr] pb-4" : "grid-rows-[0fr]"
+                      }`}
+                    >
+                      <ul className="min-h-0">
+                        {item.submenu.map((sub) => (
+                          <li key={sub.href}>
+                            <Link
+                              href={sub.href}
+                              onClick={() => setMenuOpen(false)}
+                              className="fs-label block py-2 text-cream/60"
+                            >
+                              {sub.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+
+            {/* Connect — последней строкой, как в референсе */}
+            <li data-menu-item className="border-b border-cream/15">
+              <div className="flex items-center justify-between gap-4 py-5">
+                <Link
+                  href={href(locale, "/contact")}
+                  onClick={() => setMenuOpen(false)}
+                  className="text-[30px] font-bold leading-[1.1] tracking-normal"
+                >
+                  {dict.nav.connect}
+                </Link>
+                <Link
+                  href={href(locale, "/contact")}
+                  onClick={() => setMenuOpen(false)}
+                  aria-hidden
+                  tabIndex={-1}
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/10 transition-colors duration-300 hover:bg-white/15"
+                >
+                  <ArrowRight />
+                </Link>
+              </div>
+            </li>
+          </ul>
+        </nav>
+
+        {/* Переключатель языка — по центру под списком */}
+        <div data-menu-item className="mt-12 flex justify-center">
+          <LanguageSwitcher locale={locale} dict={dict} />
         </div>
       </div>
     </header>

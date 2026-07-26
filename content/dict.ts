@@ -15,6 +15,9 @@ const en = {
     about: "About Us",
     connect: "Connect",
     home: "adswebai — home",
+    menu: "Menu",
+    menuOpen: "Open menu",
+    menuClose: "Close menu",
     aboutSub: {
       story: "Our Story",
       leadership: "Leadership",
@@ -328,6 +331,9 @@ const ru: Dict = {
     about: "О нас",
     connect: "Связаться",
     home: "adswebai — на главную",
+    menu: "Меню",
+    menuOpen: "Открыть меню",
+    menuClose: "Закрыть меню",
     aboutSub: {
       story: "Наша история",
       leadership: "Руководство",
