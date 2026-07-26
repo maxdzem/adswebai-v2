@@ -52,8 +52,13 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Пропускаем внутренние пути, статику и метаданные-роуты
+  // Пропускаем внутренние пути, статику и метаданные-роуты.
+  //
+  // ВАЖНО про icon/apple-icon/opengraph-image: Next отдаёт их по путям
+  // БЕЗ расширения (/icon?hash), поэтому фильтр по расширениям их не
+  // ловил — запрос уходил в редирект на /en/icon, которого нет, и
+  // фавиконка не отдавалась совсем. Их нужно исключать по имени.
   matcher: [
-    "/((?!_next|api|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:mp4|webm|jpg|jpeg|png|gif|svg|webp|avif|ico|txt|xml)).*)",
+    "/((?!_next|api|icon|apple-icon|opengraph-image|twitter-image|manifest|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:mp4|webm|jpg|jpeg|png|gif|svg|webp|avif|ico|txt|xml)).*)",
   ],
 };
