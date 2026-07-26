@@ -77,6 +77,8 @@ export default function Contact({ dict }: { dict: Dict }) {
   const sectionRef = useRef<HTMLElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
+  // Активное поле шага — чтобы фокусировать его по клику в любом месте карточки
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const prevHeight = useRef(0);
 
   const [step, setStep] = useState(0);
@@ -153,6 +155,10 @@ export default function Contact({ dict }: { dict: Dict }) {
       { y: 0, autoAlpha: 1, duration: 0.45, ease: "power3.out" },
       prevHeight.current ? 0.08 : 0
     );
+
+    // Со второго шага поле получает фокус само: можно сразу печатать.
+    // На первом рендере не фокусируем — увело бы страницу к форме.
+    if (prevHeight.current) inputRef.current?.focus({ preventScroll: true });
 
     return () => {
       tl.kill();
@@ -238,9 +244,12 @@ export default function Contact({ dict }: { dict: Dict }) {
 
           <form data-contact-el onSubmit={onSubmit} className="mt-16 lg:pl-32">
             {/* Карточка шага */}
+            {/* Клик в любом месте карточки ставит курсор в поле — не нужно
+                целиться ровно в строку ввода. cursor-text подсказывает это */}
             <div
               ref={cardRef}
-              className="w-full max-w-xl overflow-hidden rounded-[32px] border border-ink/80 bg-white px-8 py-7 shadow-[0_18px_40px_-24px_rgba(45,45,45,0.45)]"
+              onClick={() => inputRef.current?.focus({ preventScroll: true })}
+              className="w-full max-w-xl cursor-text overflow-hidden rounded-[32px] border border-ink/80 bg-white px-8 py-7 shadow-[0_18px_40px_-24px_rgba(45,45,45,0.45)]"
             >
               <div ref={fieldRef}>
                 {sent ? (
@@ -288,6 +297,7 @@ export default function Contact({ dict }: { dict: Dict }) {
                   <>
                     <p className="fs-body-m text-ink/60">{current.label}</p>
                     <textarea
+                      ref={inputRef as React.RefObject<HTMLTextAreaElement>}
                       value={value}
                       onChange={(e) => setValue(e.target.value)}
                       rows={4}
@@ -298,6 +308,7 @@ export default function Contact({ dict }: { dict: Dict }) {
                   <>
                     <p className="fs-body-m text-ink/60">{current.label}</p>
                     <input
+                      ref={inputRef as React.RefObject<HTMLInputElement>}
                       type={current.type}
                       value={value}
                       onChange={(e) => setValue(e.target.value)}
