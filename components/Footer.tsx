@@ -135,18 +135,18 @@ export default function Footer({ locale, dict }: { locale: Locale; dict: Dict })
           {SMALL_LINKS.map((l) => (
             // Механика Connect: слово уезжает вправо, стрелка гаснет сзади
             // и её круг-дубль появляется ПЕРЕД словом
-            <div key={l.href} data-btn-hover className="py-1.5">
+            <div key={l.href} data-btn-hover className="py-1">
               {/* Кружки крупнее и залиты #2D2D2D — на фоне футера
                   #191715 они читаются как отдельный элемент, а не как
                   тонкий контур; стрелка внутри остаётся светлой */}
               <SwapLink
                 label={l.label}
                 href={l.href}
-                size={38}
+                size={44}
                 gap={16}
-                iconSize={15}
+                iconSize={17}
                 circleClass="bg-[#2D2D2D] border border-white/20 text-cream"
-                className="text-[23px] font-medium leading-[1.35]"
+                className="text-[21px] font-medium leading-[1.3]"
               />
             </div>
           ))}
@@ -159,10 +159,10 @@ export default function Footer({ locale, dict }: { locale: Locale; dict: Dict })
       </div>
 
       {/* Нижний ряд: соцсети + Follow Us | Newsletter | копирайт.
-          Пустая тёмная зона перенесена из-под строки наверх (8см минус
-          срезанные 1.5см = 6.5см), поэтому под копирайтом снова обычный
-          отступ, а воздух оказался между блоком ссылок и этой строкой */}
-      <div className="mt-[calc(6rem+6.5cm)] flex flex-col gap-10 border-t border-white/10 pt-8 md:flex-row md:items-center md:justify-between">
+          Тёмная зона над разделительной линией срезана ещё на 4см
+          (3.5см → −0.5см от базовых 6rem), сама строка сохраняет
+          1см воздуха сверху и не липнет к линии */}
+      <div className="mt-[calc(6rem-0.5cm)] flex flex-col gap-10 border-t border-white/10 pt-[calc(2rem+1cm)] md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             {SOCIALS.map((s) => (

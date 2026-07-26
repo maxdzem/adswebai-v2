@@ -5,7 +5,6 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import Button from "./Button";
-import HeroAnimation from "./HeroAnimation";
 import CreativeHero from "./CreativeHero";
 
 import type { Dict } from "@/content/dict";
@@ -122,9 +121,8 @@ export default function AiIntro({ dict }: { dict: Dict }) {
       </div>
 
       {/* adswebai.flow product banner — вход привязан к скроллу (scrub).
-          Оранжевый градиент остаётся фоном, поверх него два канваса:
-          снизу свободные частицы со связями, сверху интерактивная сетка,
-          разбегающаяся от курсора */}
+          Оранжевый градиент остаётся фоном, поверх него интерактивная
+          сетка частиц, разбегающаяся от курсора */}
       <div
         data-flow-banner
         className="relative mx-auto mt-28 h-[65vh] w-full max-w-[72%] overflow-hidden"
@@ -133,7 +131,6 @@ export default function AiIntro({ dict }: { dict: Dict }) {
             "radial-gradient(120% 140% at 20% 0%, #f8bd7e 0%, #f2a45c 45%, #e88d33 100%)",
         }}
       >
-        <HeroAnimation className="pointer-events-none absolute inset-0" />
         <CreativeHero className="absolute inset-0" />
       </div>
     </section>

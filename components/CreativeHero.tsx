@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 /**
  * Сетка частиц, разбегающихся от курсора.
  *
- * Частицы стоят решёткой с шагом 30px. В радиусе 100px от курсора они
+ * Частицы стоят решёткой с шагом 30px. В радиусе 200px от курсора они
  * отталкиваются тем сильнее, чем ближе, и плавно возвращаются на своё
  * место. Позиция курсора сглаживается лерпом (0.1) — иначе рывок мыши
  * дёргал бы всю сетку.
@@ -15,7 +15,7 @@ import { motion } from "framer-motion";
  */
 
 const SPACING = 30;
-const REPEL_RADIUS = 100;
+const REPEL_RADIUS = 200;
 const LINK_DIST = 30;
 const LERP = 0.1;
 
@@ -111,7 +111,7 @@ export default function CreativeHero({
 
         if (dist < REPEL_RADIUS && dist > 0.01) {
           // Сила тем больше, чем ближе частица к курсору
-          const force = (1 - dist / REPEL_RADIUS) * 2.2;
+          const force = (1 - dist / REPEL_RADIUS) * 4.4;
           p.vx += (dx / dist) * force;
           p.vy += (dy / dist) * force;
         }

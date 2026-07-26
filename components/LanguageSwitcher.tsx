@@ -12,8 +12,13 @@ import {
 } from "@/content/i18n";
 import type { Dict } from "@/content/dict";
 
-/** Ширина раскрытой пилюли с названием языка в шапке. */
+/** Желаемая ширина раскрытой пилюли с заголовком в шапке. */
 const PILL_W = 268;
+/** Круг с шевроном (44px) + зазор — их место надо оставить свободным. */
+const CHEV_SPACE = 52;
+/** Ниже этой ширины пилюля не раскрывается: незачем — текст всё равно
+ *  не поместится, а раскрытие полезло бы на соседние элементы. */
+const PILL_MIN = 150;
 
 function GlobeIcon() {
   return (
@@ -154,8 +159,14 @@ export default function LanguageSwitcher({
     const ctx = gsap.context(() => {
       if (open) {
         if (variant === "dot") {
+          // Доступное место = ширина средней колонки минус круг с шевроном.
+          // Так пилюля никогда не вылезает за свою дорожку грида и не
+          // наезжает на логотип или меню, даже при открытых девтулзах.
+          const room = (rootRef.current?.offsetWidth ?? 0) - CHEV_SPACE;
+          const target = Math.max(44, Math.min(PILL_W, room));
+
           gsap.to(pillRef.current, {
-            width: PILL_W,
+            width: target < PILL_MIN ? 44 : target,
             duration: 0.45,
             ease: "power3.out",
             overwrite: "auto",
