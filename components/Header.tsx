@@ -4,41 +4,53 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Button from "./Button";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { SOLUTIONS, SERVICES } from "@/content/site";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-// Пункты и подменю (Solutions — 4, Marketing Services — 9, About Us — 5)
-const NAV: { label: string; submenu?: string[] }[] = [
+// Пункты и подменю (Solutions — 4, Marketing Services — 9, About Us — 5).
+// Подпункты собираются из того же контент-модуля, что рендерит страницы:
+// добавил решение/услугу в content/site.ts — оно само появилось в меню,
+// и ссылка гарантированно ведёт на существующий роут.
+type NavItem = {
+  label: string;
+  href: string;
+  submenu?: { label: string; href: string }[];
+};
+
+const NAV: NavItem[] = [
   {
     label: "Solutions",
-    submenu: [
-      "Real-Time Brands",
-      "Media Acceleration",
-      "Marketing Orchestration",
-      "AI Transformation",
-    ],
+    href: "/solutions",
+    submenu: SOLUTIONS.map((p) => ({
+      label: p.title,
+      href: `/solutions/${p.slug}`,
+    })),
   },
   {
     label: "Marketing Services",
-    submenu: [
-      "Brand Strategy",
-      "Content Production",
-      "Social & Influencer",
-      "Performance Media",
-      "SEO & AEO",
-      "CRM & Email",
-      "Data & Measurement",
-      "Commerce",
-      "Creative Operations",
-    ],
+    href: "/services",
+    submenu: SERVICES.map((p) => ({
+      label: p.title,
+      href: `/services/${p.slug}`,
+    })),
   },
-  { label: "Technology Services" },
-  { label: "Work" },
+  { label: "Technology Services", href: "/technology-services" },
+  { label: "Work", href: "/work" },
   {
     label: "About Us",
-    submenu: ["Our Story", "Leadership", "Careers", "Newsroom", "Contact"],
+    href: "/about",
+    submenu: [
+      { label: "Our Story", href: "/about" },
+      { label: "Leadership", href: "/about/leadership" },
+      { label: "Careers", href: "/about/careers" },
+      { label: "Newsroom", href: "/about/newsroom" },
+      { label: "Contact", href: "/contact" },
+    ],
   },
 ];
 
@@ -69,6 +81,12 @@ export default function Header() {
   const lineRef = useRef<HTMLDivElement>(null);
   const tvRef = useRef<gsap.core.Timeline | null>(null);
   const [scrolled, setScrolled] = useState(false);
+  // Тёмный видео-герой есть только на главной. Определяем ПО МАРШРУТУ:
+  // шапка живёт в layout и не перемонтируется при клиентских переходах,
+  // поэтому разовая проверка DOM при маунте «залипала» на первом значении —
+  // из-за этого на внутренних страницах логотип не розовел.
+  const pathname = usePathname();
+  const darkHero = pathname === "/";
 
   useGSAP(
     () => {
@@ -184,7 +202,10 @@ export default function Header() {
     <header
       ref={ref}
       className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
-        scrolled ? "text-ink" : "text-cream"
+        // Прозрачное состояние: кремовый текст поверх тёмного видео главной,
+        // но тёмный — поверх светлого фона внутренних страниц, иначе логотип
+        // сливается с фоном. Сам эффект прозрачности при этом сохраняется.
+        scrolled || !darkHero ? "text-ink" : "text-cream"
       }`}
     >
       {/* Светлое полотно шапки: 7 горизонтальных полос-«пикселей»,
@@ -206,26 +227,32 @@ export default function Header() {
         className="absolute inset-x-0 bottom-0 -z-10 h-px origin-left bg-black"
       />
 
-      <div className="flex h-[100px] items-center justify-between px-6 lg:px-10">
-        <a
-          href="#"
+      {/* Грид 1fr|auto|1fr: язык в средней колонке. При нехватке места
+          (открытые девтулзы, узкое окно) колонки сжимаются, и переключатель
+          сдвигается пропорционально — грид-дорожки не пересекаются,
+          налезть на Solutions он не может */}
+      <div className="grid h-[100px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 lg:px-10">
+        {/* На внутренних страницах логотип розовый (цвет круга с лендинга),
+            но только наверху: при скролле на светлой шапке он снова
+            тёмно-серый, как на лендинге. На главной — цвет темы шапки */}
+        <Link
+          href="/"
           data-nav-item
-          className="text-[32px] font-black tracking-normal"
+          aria-label="adswebai — home"
+          className={`justify-self-start text-[32px] font-black tracking-normal transition-colors duration-300 ${
+            darkHero || scrolled ? "" : "text-blush"
+          }`}
         >
           .adswebai
-        </a>
+        </Link>
 
-        {/* Переключатель языка. Центрируется flex-раскладкой на всю ширину
-            шапки, а не translate: ширина «шторки» анимируется, и при
-            justify-center центр держится в каждом кадре — точно посередине.
-            pointer-events-none у оверлея, чтобы не перехватывать шапку. */}
-        <div className="pointer-events-none absolute inset-x-0 top-[28px] z-50 flex justify-center">
-          <div data-nav-item className="pointer-events-auto">
-            <LanguageSwitcher />
-          </div>
+        {/* Якорь 44×44 для шторки: сама шторка позиционируется абсолютно
+            от его центра, поэтому раскрытие не двигает соседние колонки */}
+        <div data-nav-item className="relative h-[44px] w-[44px] justify-self-center">
+          <LanguageSwitcher />
         </div>
 
-        <div className="flex items-center gap-10">
+        <div className="flex items-center justify-end gap-10">
           <ul className="fs-label hidden items-center gap-10 font-medium lg:flex">
             {NAV.map((item) => (
               <li
@@ -239,31 +266,37 @@ export default function Header() {
                   className="nav-dot pointer-events-none absolute -left-[15px] top-1/2 h-2 w-2 rounded-full bg-current"
                 />
 
-                <a href="#" className="flex items-center gap-1.5 py-2">
+                <Link href={item.href} className="flex items-center gap-1.5 py-2">
                   <span className="nav-label inline-block">{item.label}</span>
                   {item.submenu && <Chevron />}
-                </a>
+                </Link>
 
                 {/* Выпадающая панель. Обёртка начинается от верха пункта
                     (top-0) и сдвинута на -30px влево (= padding панели),
-                    панель отодвинута mt-9 — мёртвой зоны под курсором нет */}
+                    панель отодвинута mt-9 — мёртвой зоны под курсором нет.
+                    По аудиту: появление — ЧИСТЫЙ fade за 0.08s, без слайда
+                    (visibility+opacity вместо display, иначе fade не работает);
+                    тень всегда светлая rgba(255,255,255,.15) */}
                 {item.submenu && (
-                  <div className="absolute -left-[30px] top-0 z-20 hidden group-hover:block">
-                    <ul className="mt-9 min-w-[155px] rounded-[4px] bg-ink px-[30px] py-[20px] text-[#E4E4E5] shadow-[0_20px_40px_-16px_rgba(0,0,0,0.15)]">
+                  <div className="invisible absolute -left-[30px] top-0 z-20 opacity-0 transition-opacity duration-[80ms] group-hover:visible group-hover:opacity-100">
+                    <ul className="mt-9 min-w-[155px] rounded-[4px] bg-ink px-[30px] py-[20px] text-[#E4E4E5] shadow-[0_20px_40px_-16px_rgba(255,255,255,0.15)]">
                       {item.submenu.map((sub) => (
-                        <li key={sub} className="submenu-item group/sub relative">
+                        <li
+                          key={sub.href}
+                          className="submenu-item group/sub relative"
+                        >
                           {/* Точка активного подпункта */}
                           <span
                             aria-hidden
                             className="subitem-dot pointer-events-none absolute left-[2px] top-1/2 h-2 w-2 rounded-full bg-current"
                           />
                           {/* Текст уезжает вправо на 19px за 150мс */}
-                          <a
-                            href="#"
+                          <Link
+                            href={sub.href}
                             className="block whitespace-nowrap py-[6px] transition-transform duration-150 group-hover/sub:translate-x-[19px]"
                           >
-                            {sub}
-                          </a>
+                            {sub.label}
+                          </Link>
                         </li>
                       ))}
                     </ul>
@@ -275,17 +308,21 @@ export default function Header() {
 
           {/* Connect: та же swap-анимация, что у «Read now»;
               ховер-зона — вся ссылка (data-btn-hover) */}
-          <a href="#connect" data-btn-hover data-nav-item className="block">
-            {/* На светлой шапке: область #222824, надпись и стрелка белые;
-                на прозрачной (самый верх) — кремовая с тёмным текстом */}
+          <Link href="/contact" data-btn-hover data-nav-item className="block">
+            {/* На светлой шапке: область #222824, надпись и стрелка белые.
+                На прозрачной поверх тёмного видео — кремовая с тёмным текстом.
+                На прозрачной поверх светлой страницы кремовая кнопка утонула
+                бы в фоне, поэтому там тоже тёмная. */}
             <Button
               label="Connect"
               href={null}
               colorClass={
-                scrolled ? "bg-[#222824] text-white" : "bg-cream text-ink"
+                scrolled || !darkHero
+                  ? "bg-[#222824] text-white"
+                  : "bg-cream text-ink"
               }
             />
-          </a>
+          </Link>
         </div>
       </div>
     </header>

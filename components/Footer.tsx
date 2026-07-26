@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import SwapLink from "./SwapLink";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const BIG_LINKS = [
   "What We Do",
@@ -106,44 +108,43 @@ export default function Footer() {
 
         <nav className="lg:col-span-3">
           {BIG_LINKS.map((l) => (
+            // Как пункты шапки: точка «падает» слева, слово подпрыгивает
+            // (те же кейфреймы dot-in/dot-out/label-bounce из globals.css)
             <a
               key={l}
               href="#"
-              // ИЗМЕНЕНО: hover — ссылка мягко сдвигается вправо
-              className="fs-display-s block py-1.5 font-medium leading-[1.15] tracking-normal transition-transform duration-300 hover:translate-x-2 hover:opacity-70"
+              className="nav-item fs-display-s relative block w-max py-1.5 font-medium leading-[1.15] tracking-normal"
             >
-              {l}
+              <span
+                aria-hidden
+                className="nav-dot pointer-events-none absolute -left-5 top-1/2 h-2 w-2 rounded-full bg-current"
+              />
+              <span className="nav-label inline-block">{l}</span>
             </a>
           ))}
         </nav>
 
         <div className="lg:col-span-4">
           {SMALL_LINKS.map((l) => (
-            <a
-              key={l}
-              href="#"
-              className="group flex items-center gap-3 py-1.5 text-[14px] font-medium"
-            >
-              {l}
-              {/* ИЗМЕНЕНО: hover — кружок со стрелкой уезжает вправо и инвертируется */}
-              <span className="grid h-[26px] w-[26px] place-items-center rounded-full border border-white/25 transition-all duration-300 group-hover:translate-x-1.5 group-hover:border-cream group-hover:bg-cream group-hover:text-ink">
-                <Arrow size={11} />
-              </span>
-            </a>
+            // Механика Connect: слово уезжает вправо, стрелка гаснет сзади
+            // и её круг-дубль появляется ПЕРЕД словом
+            <div key={l} data-btn-hover className="py-1.5">
+              <SwapLink
+                label={l}
+                href="#"
+                size={26}
+                gap={12}
+                iconSize={11}
+                circleClass="border border-white/25 text-current"
+                className="text-[14px] font-medium"
+              />
+            </div>
           ))}
         </div>
 
         <div className="lg:col-span-3 lg:justify-self-end">
-          <a
-            href="#"
-            // ИЗМЕНЕНО: hover пилюли языка — фон светлеет, стрелка сдвигается
-            className="fs-label group inline-flex items-center gap-3 rounded-full border border-white/30 px-5 py-2.5 transition-colors duration-300 hover:bg-white/10"
-          >
-            Choose your language
-            <span className="grid h-7 w-7 place-items-center rounded-full border border-white/25 transition-transform duration-300 group-hover:translate-x-1">
-              <Arrow size={11} />
-            </span>
-          </a>
+          {/* Рабочий выбор языка: меню выпадает вверх, EN/RU */}
+          <LanguageSwitcher variant="pill" />
         </div>
       </div>
 

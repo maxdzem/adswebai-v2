@@ -2,9 +2,10 @@
 
 import { useRef } from "react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 
-gsap.registerPlugin(useGSAP);
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export default function Hero() {
   const ref = useRef<HTMLElement>(null);
@@ -21,6 +22,32 @@ export default function Hero() {
           delay: 0.25,
         })
         .from("[data-hero-cue]", { autoAlpha: 0, y: 24, duration: 0.7 }, "-=0.5");
+
+      // Кью «Scroll» намекает на скролл: подпись мягко покачивается,
+      // а стрелка ныряет вниз и растворяется — и так по кругу
+      gsap
+        .timeline({ repeat: -1, repeatDelay: 1.1, delay: 1.8 })
+        .to("[data-cue-label]", {
+          y: 6,
+          duration: 0.5,
+          ease: "power2.inOut",
+          yoyo: true,
+          repeat: 1,
+        })
+        .fromTo(
+          "[data-cue-arrow]",
+          { y: -6, autoAlpha: 1 },
+          { y: 10, autoAlpha: 0, duration: 0.7, ease: "power2.in" },
+          0.15
+        )
+        .to("[data-cue-arrow]", { y: -6, autoAlpha: 1, duration: 0.4, ease: "power2.out" });
+
+      // Начали скроллить — намёк больше не нужен, кью гаснет
+      gsap.to("[data-hero-cue]", {
+        autoAlpha: 0,
+        ease: "none",
+        scrollTrigger: { start: 10, end: 160, scrub: true },
+      });
     },
     { scope: ref }
   );
@@ -56,8 +83,11 @@ export default function Hero() {
         data-hero-cue
         className="absolute bottom-12 left-1/2 z-10 -translate-x-1/2 text-white"
       >
-        <span className="fs-body-l font-serif italic tracking-wide">Scroll</span>
+        <span data-cue-label className="fs-body-l inline-block font-serif italic tracking-wide">
+          Scroll
+        </span>
         <svg
+          data-cue-arrow
           width="30"
           height="46"
           viewBox="0 0 30 46"

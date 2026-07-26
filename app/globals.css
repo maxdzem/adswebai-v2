@@ -6,6 +6,9 @@
   --color-ink: #2d2d2d;
   --color-blush: #feafe6;
   --color-grape: #4f2be8;
+  /* Фон контентной части внутренних страниц. Заметно темнее cream,
+     чтобы медиа-блоки и текст читались как слой поверх фона. */
+  --color-mist: #d6d4d0;
   --font-sans: var(--font-inter);
   --font-serif: var(--font-newsreader);
 }

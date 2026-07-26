@@ -1,18 +1,23 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export default function AnimatedCircle() {
   const wrapperRef = useRef<HTMLElement>(null);
   const circleRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const videoCircleRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
+  // useGSAP вместо useEffect: сам делает revert при размонтировании
+  // и корректно переживает двойной вызов эффектов в StrictMode —
+  // именно этого требует PROMPT.md.
+  useGSAP(
+    () => {
       const circle = circleRef.current!;
 
       // Длительности — в «процентах» таймлайна (сумма фаз = 100)
@@ -40,6 +45,14 @@ export default function AnimatedCircle() {
           0
         )
         .fromTo(contentRef.current, { autoAlpha: 0 }, { autoAlpha: 1, duration: 10 }, 10)
+        // Видео-круг по аудиту: непрерывный scroll-linked scale — растёт
+        // к центру прохода (~0.32→1) и сжимается после, форма всегда круг
+        .fromTo(
+          videoCircleRef.current,
+          { scale: 0.32 },
+          { scale: 1, duration: 28, ease: "power1.out" },
+          10
+        )
 
         // ФАЗА 2 (38→70%) — длинный холд: продолжаем ехать по розовому,
         // экран целиком залит, контент читается
@@ -47,11 +60,11 @@ export default function AnimatedCircle() {
         // ФАЗА 3 (70→100%) — контент гаснет, круг схлопывается
         // до точки и исчезает В НИЧТО (scale: 0) ещё до открепления секции
         .to(contentRef.current, { autoAlpha: 0, duration: 6 }, 66)
+        .to(videoCircleRef.current, { scale: 0.32, duration: 26, ease: "power2.inOut" }, 70)
         .to(circle, { scale: 0, duration: 30, ease: "power2.inOut" }, 70);
-    }, wrapperRef);
-
-    return () => ctx.revert();
-  }, []);
+    },
+    { scope: wrapperRef }
+  );
 
   return (
     <>
@@ -115,7 +128,12 @@ export default function AnimatedCircle() {
               <p className="fs-body-m text-ink/50">Always-on AI Agents</p>
             </div>
 
-            <div className="absolute left-1/2 top-1/2 aspect-square w-[32vw] max-w-[66vh] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full">
+            {/* video-mask из аудита: круг с overflow-hidden, масштабируется
+                отдельно от розового полотна; play-кнопка 70×70 по центру */}
+            <div
+              ref={videoCircleRef}
+              className="absolute left-1/2 top-1/2 aspect-square w-[32vw] max-w-[66vh] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full"
+            >
               <video
                 className="h-full w-full object-cover"
                 src="/face-video.mp4"
@@ -126,7 +144,7 @@ export default function AnimatedCircle() {
               />
               <button
                 aria-label="Play"
-                className="absolute left-1/2 top-1/2 grid h-16 w-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-ink/80 text-white"
+                className="absolute left-1/2 top-1/2 grid h-[70px] w-[70px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-black/40 text-white backdrop-blur-sm"
               >
                 <svg width="14" height="16" viewBox="0 0 14 16" fill="none" aria-hidden>
                   <path d="M1 1.5v13L13 8 1 1.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />

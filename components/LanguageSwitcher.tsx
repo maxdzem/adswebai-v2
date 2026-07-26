@@ -3,12 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 
-// Пока без локалей — только выбор языка в UI
+// Пока без локалей — только выбор языка в UI. Языки: EN и RU.
 const LANGS = [
   { code: "en", name: "English", Flag: FlagUS },
   { code: "ru", name: "Русский", Flag: FlagRU },
-  { code: "pl", name: "Polski", Flag: FlagPL },
-  { code: "uk", name: "Українська", Flag: FlagUA },
 ];
 
 const COLLAPSED = 44;
@@ -41,24 +39,6 @@ function FlagRU() {
   );
 }
 
-function FlagPL() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-full w-full">
-      <rect width="24" height="12" fill="#f7f7f7" />
-      <rect y="12" width="24" height="12" fill="#d4213d" />
-    </svg>
-  );
-}
-
-function FlagUA() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-full w-full">
-      <rect width="24" height="12" fill="#2b6cd4" />
-      <rect y="12" width="24" height="12" fill="#f5c542" />
-    </svg>
-  );
-}
-
 function GlobeIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -72,7 +52,70 @@ function GlobeIcon() {
   );
 }
 
-export default function LanguageSwitcher() {
+function LangRow({
+  lang,
+  active,
+  onPick,
+}: {
+  lang: (typeof LANGS)[number];
+  active: boolean;
+  onPick: () => void;
+}) {
+  return (
+    <button
+      data-lang-item
+      type="button"
+      onClick={onPick}
+      className={`flex w-full items-center gap-3 rounded-[14px] px-3 py-2.5 text-left transition-colors duration-200 ${
+        active
+          ? "bg-white/10 text-white"
+          : "text-white/55 hover:bg-white/5 hover:text-white/85"
+      }`}
+    >
+      <span className="h-7 w-7 shrink-0 overflow-hidden rounded-full ring-1 ring-white/15">
+        <lang.Flag />
+      </span>
+      <span className="fs-label font-medium">{lang.name}</span>
+    </button>
+  );
+}
+
+/** Закрытие по клику мимо и Escape — общее для обоих вариантов. */
+function useOutsideClose(
+  open: boolean,
+  rootRef: React.RefObject<HTMLDivElement | null>,
+  close: () => void
+) {
+  useEffect(() => {
+    if (!open) return;
+
+    const onDown = (e: MouseEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) close();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, rootRef, close]);
+}
+
+/**
+ * Переключатель языка.
+ *  - variant="dot"  — серая точка в шапке, морфится в шторку (как раньше)
+ *  - variant="pill" — пилюля «Choose your language» в футере, меню
+ *    выпадает ВВЕРХ тем же дизайном (тёмная панель, флаги, подсветка)
+ */
+export default function LanguageSwitcher({
+  variant = "dot",
+}: {
+  variant?: "dot" | "pill";
+}) {
   const rootRef = useRef<HTMLDivElement>(null);
   const shellRef = useRef<HTMLDivElement>(null);
   const globeRef = useRef<HTMLSpanElement>(null);
@@ -82,27 +125,31 @@ export default function LanguageSwitcher() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("en");
 
+  useOutsideClose(open, rootRef, () => setOpen(false));
+
+  // dot: морфинг точка → шторка
   useEffect(() => {
+    if (variant !== "dot") return;
+
     const ctx = gsap.context(() => {
+      // xPercent -50: шторка растёт из центра якоря 44×44 в шапке,
+      // GSAP пересчитывает центр на каждом кадре анимации ширины
       gsap.set(shellRef.current, {
+        xPercent: -50,
         width: COLLAPSED,
         height: COLLAPSED,
         borderRadius: 100,
       });
       gsap.set("[data-lang-item]", { autoAlpha: 0, y: 12 });
 
-      // Морфинг «шторки»: круглая точка разворачивается в панель
       const tl = gsap.timeline({ paused: true });
 
       tl.to(
         shellRef.current,
         {
           width: PANEL_W,
-          height: () => panelRef.current?.offsetHeight ?? 220,
+          height: () => panelRef.current?.offsetHeight ?? 140,
           borderRadius: 22,
-          // Свёрнутая точка чёрная, раскрытая шторка перекрашивается
-          // в тот же серый, что у выпадающих меню (Solutions и др.) — #2D2D2D
-          backgroundColor: "#2d2d2d",
           duration: 0.55,
           ease: "expo.out",
         },
@@ -129,41 +176,117 @@ export default function LanguageSwitcher() {
     }, rootRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [variant]);
+
+  // pill: панель выпадает вверх коротким fade+slide
+  useEffect(() => {
+    if (variant !== "pill") return;
+
+    const ctx = gsap.context(() => {
+      gsap.set(panelRef.current, { autoAlpha: 0, y: 10 });
+      gsap.set("[data-lang-item]", { autoAlpha: 0, y: 8 });
+    }, rootRef);
+
+    return () => ctx.revert();
+  }, [variant]);
 
   useEffect(() => {
-    const tl = tlRef.current;
-    if (!tl) return;
-    if (open) tl.play();
-    else tl.reverse();
-  }, [open]);
+    if (variant === "dot") {
+      const tl = tlRef.current;
+      if (!tl) return;
+      if (open) tl.play();
+      else tl.reverse();
+      return;
+    }
 
-  // Закрытие по клику снаружи и по Escape
-  useEffect(() => {
-    if (!open) return;
+    // pill
+    if (open) {
+      gsap.to(panelRef.current, {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.3,
+        ease: "power3.out",
+      });
+      gsap.to("[data-lang-item]", {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.25,
+        stagger: 0.05,
+        delay: 0.05,
+        ease: "power3.out",
+        overwrite: "auto",
+      });
+    } else {
+      gsap.to(panelRef.current, {
+        autoAlpha: 0,
+        y: 10,
+        duration: 0.2,
+        ease: "power2.in",
+      });
+      gsap.set("[data-lang-item]", { autoAlpha: 0, y: 8, delay: 0.2 });
+    }
+  }, [open, variant]);
 
-    const onDown = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
+  const pick = (code: string) => {
+    setActive(code);
+    setOpen(false);
+  };
 
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  if (variant === "pill") {
+    return (
+      <div ref={rootRef} className="relative">
+        {/* Панель над пилюлей */}
+        <div
+          ref={panelRef}
+          className="invisible absolute bottom-[calc(100%+12px)] right-0 w-[236px] rounded-[18px] bg-[#2d2d2d] p-2 opacity-0 shadow-[0_24px_48px_-16px_rgba(0,0,0,0.6)]"
+        >
+          {LANGS.map((l) => (
+            <LangRow
+              key={l.code}
+              lang={l}
+              active={l.code === active}
+              onPick={() => pick(l.code)}
+            />
+          ))}
+        </div>
 
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          // Ховер заметный: пилюля заливается кремовым и инвертирует текст
+          className="fs-label group inline-flex items-center gap-3 rounded-full border border-white/30 px-5 py-2.5 transition-colors duration-300 hover:border-cream hover:bg-cream hover:text-ink"
+        >
+          Choose your language
+          <span
+            className={`grid h-7 w-7 place-items-center rounded-full border border-white/25 transition-all duration-300 group-hover:border-ink/40 ${
+              open ? "-rotate-90" : "rotate-90"
+            }`}
+          >
+            <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden>
+              <path
+                d="M1 7h11m0 0L7.5 2.5M12 7l-4.5 4.5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+        </button>
+      </div>
+    );
+  }
+
+  // dot
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative h-full w-full">
+      {/* Серая точка (цвет панелей меню), раскрывается в тёмную шторку.
+          Абсолют от центра якоря: раскрытие не расталкивает грид шапки */}
       <div
         ref={shellRef}
-        className="relative overflow-hidden bg-black text-white shadow-[0_24px_48px_-16px_rgba(0,0,0,0.6)]"
+        className="absolute left-1/2 top-0 z-20 overflow-hidden bg-[#2d2d2d] text-white shadow-[0_24px_48px_-16px_rgba(0,0,0,0.6)]"
       >
-        {/* Свёрнутое состояние — точка с глобусом */}
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -178,35 +301,18 @@ export default function LanguageSwitcher() {
           </span>
         </button>
 
-        {/* Развёрнутая панель */}
         <div
           ref={panelRef}
           className="absolute left-1/2 top-0 w-[236px] -translate-x-1/2 p-2"
         >
-          {LANGS.map((l) => {
-            const isActive = l.code === active;
-            return (
-              <button
-                key={l.code}
-                data-lang-item
-                type="button"
-                onClick={() => {
-                  setActive(l.code);
-                  setOpen(false);
-                }}
-                className={`flex w-full items-center gap-3 rounded-[14px] px-3 py-2.5 text-left transition-colors duration-200 ${
-                  isActive
-                    ? "bg-white/10 text-white"
-                    : "text-white/55 hover:bg-white/5 hover:text-white/85"
-                }`}
-              >
-                <span className="h-7 w-7 shrink-0 overflow-hidden rounded-full ring-1 ring-white/15">
-                  <l.Flag />
-                </span>
-                <span className="fs-label font-medium">{l.name}</span>
-              </button>
-            );
-          })}
+          {LANGS.map((l) => (
+            <LangRow
+              key={l.code}
+              lang={l}
+              active={l.code === active}
+              onPick={() => pick(l.code)}
+            />
+          ))}
         </div>
       </div>
     </div>

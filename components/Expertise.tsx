@@ -4,6 +4,7 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import SwapLink from "./SwapLink";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -26,9 +27,11 @@ export default function Expertise() {
 
   useGSAP(
     () => {
+      // Мягкое появление с растворением blur — как на главной у карточек
       gsap.from("[data-exp-heading]", {
         y: 60,
         autoAlpha: 0,
+        filter: "blur(10px)",
         duration: 0.9,
         ease: "power3.out",
         scrollTrigger: { trigger: ref.current, start: "top 78%", once: true },
@@ -38,6 +41,7 @@ export default function Expertise() {
         gsap.from(card, {
           y: 80,
           autoAlpha: 0,
+          filter: "blur(10px)",
           duration: 0.9,
           delay: i * 0.1,
           ease: "power3.out",
@@ -59,7 +63,7 @@ export default function Expertise() {
 
       <div className="mt-16 grid grid-cols-1 gap-x-6 gap-y-16 lg:grid-cols-12">
         {/* Case Study */}
-        <article data-exp-card className="lg:col-span-5">
+        <article data-exp-card data-btn-hover className="lg:col-span-5">
           <div
             className="flex aspect-[16/11] w-full items-center justify-center"
             style={{
@@ -75,16 +79,13 @@ export default function Expertise() {
             </p>
           </div>
           <p className="fs-label mt-5 font-medium text-ink/80">Case Study</p>
-          <h3 className="fs-body-m mt-2 flex items-center gap-3 font-bold leading-[1.15] tracking-normal">
-            Boomtown Unboxed
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ink text-cream">
-              <Arrow />
-            </span>
+          <h3 className="fs-body-m mt-2 font-bold leading-[1.15] tracking-normal">
+            <SwapLink label="Boomtown Unboxed" href={null} size={32} iconSize={12} />
           </h3>
         </article>
 
         {/* Report */}
-        <article data-exp-card className="lg:col-span-2 lg:col-start-7">
+        <article data-exp-card data-btn-hover className="lg:col-span-2 lg:col-start-7">
           <div
             className="aspect-square w-full"
             style={{
@@ -94,16 +95,18 @@ export default function Expertise() {
           />
           <p className="fs-label mt-5 font-medium text-ink/80">Report</p>
           <h3 className="fs-body-m mt-2 font-bold leading-[1.25] tracking-normal">
-            Owning the Answer: The Marketer’s Playbook for AEO, GEO and the AI
-            Search Era{" "}
-            <span className="ml-1 inline-grid h-8 w-8 shrink-0 translate-y-1 place-items-center rounded-full bg-ink text-cream">
-              <Arrow />
-            </span>
+            <SwapLink
+              label="Owning the Answer: The Marketer’s Playbook for AEO, GEO and the AI Search Era"
+              href={null}
+              size={32}
+              iconSize={12}
+              className="max-w-full"
+            />
           </h3>
         </article>
 
         {/* Video block */}
-        <article data-exp-card className="lg:col-span-3 lg:col-start-10">
+        <article data-exp-card data-btn-hover className="lg:col-span-3 lg:col-start-10">
           <video
             className="aspect-[16/10] w-full object-cover"
             src="/SMS-Personalization.mp4"
@@ -114,10 +117,13 @@ export default function Expertise() {
           />
           <p className="fs-label mt-5 font-medium text-ink/80">Content</p>
           <h3 className="fs-body-m mt-2 font-bold leading-[1.25] tracking-normal">
-            Smarter Investments for an Evolving Marketing Landscape{" "}
-            <span className="ml-1 inline-grid h-8 w-8 shrink-0 translate-y-1 place-items-center rounded-full bg-ink text-cream">
-              <Arrow />
-            </span>
+            <SwapLink
+              label="Smarter Investments for an Evolving Marketing Landscape"
+              href={null}
+              size={32}
+              iconSize={12}
+              className="max-w-full"
+            />
           </h3>
         </article>
       </div>

@@ -4,35 +4,9 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import Button from "./Button";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
-
-function Arrow() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-      <path
-        d="M1 7h11m0 0L7.5 2.5M12 7l-4.5 4.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function PillButton({ label }: { label: string }) {
-  return (
-    <a href="#connect" className="inline-flex items-center gap-1">
-      <span className="fs-label rounded-full bg-ink px-5 py-2.5 font-medium text-cream">
-        {label}
-      </span>
-      <span className="grid h-10 w-10 place-items-center rounded-full bg-ink text-cream">
-        <Arrow />
-      </span>
-    </a>
-  );
-}
 
 export default function AiIntro() {
   const ref = useRef<HTMLElement>(null);
@@ -43,6 +17,7 @@ export default function AiIntro() {
         gsap.from(block, {
           y: 70,
           autoAlpha: 0,
+          filter: "blur(10px)",
           duration: 0.9,
           ease: "power3.out",
           scrollTrigger: { trigger: block, start: "top 82%", once: true },
@@ -60,6 +35,24 @@ export default function AiIntro() {
           once: true,
         },
       });
+
+      // Оранжевый баннер: мягкий scrub-вход — подрастает и доезжает
+      // на место по мере скролла, без резких порогов
+      gsap.fromTo(
+        "[data-flow-banner]",
+        { y: 80, scale: 0.94 },
+        {
+          y: 0,
+          scale: 1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: "[data-flow-banner]",
+            start: "top 95%",
+            end: "top 45%",
+            scrub: 1,
+          },
+        }
+      );
     },
     { scope: ref }
   );
@@ -71,7 +64,8 @@ export default function AiIntro() {
         <div className="lg:col-span-3 lg:col-start-2">
           <p className="fs-label font-medium">Connect</p>
           <div className="mt-16">
-            <PillButton label="Reach out" />
+            {/* Та же swap-анимация, что у Connect в шапке */}
+            <Button label="Reach out" href="#connect" />
           </div>
         </div>
         <div className="lg:col-span-8">
@@ -117,21 +111,15 @@ export default function AiIntro() {
             powered by adswebai.flow
           </h3>
           <div className="mt-12 lg:pl-[14%]">
-            <a href="#" className="inline-flex items-center gap-1">
-              <span className="fs-label rounded-full bg-ink px-4 py-2 font-medium text-cream">
-                Explore adswebai.flow
-              </span>
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-ink text-cream">
-                <Arrow />
-              </span>
-            </a>
+            {/* Та же swap-анимация, что у Connect в шапке */}
+            <Button label="Explore adswebai.flow" href="#" />
           </div>
         </div>
       </div>
 
-      {/* adswebai.flow product banner */}
+      {/* adswebai.flow product banner — вход привязан к скроллу (scrub) */}
       <div
-        data-ai-block
+        data-flow-banner
         className="mx-auto mt-28 h-[65vh] w-full max-w-[72%]"
         style={{
           background:

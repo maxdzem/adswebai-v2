@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Button from "./Button";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const POSTS = [
   {
@@ -68,6 +71,34 @@ export default function ArticlesList() {
     const ctx = gsap.context(() => {
       gsap.set(followerRef.current, { autoAlpha: 0 });
 
+      // Мягкое «айфоновское» появление при скролле: фейд + растворение
+      // blur, заголовок затем строки каскадом. Один раз, без вычурности.
+      gsap.from("[data-list-heading]", {
+        y: 40,
+        autoAlpha: 0,
+        filter: "blur(10px)",
+        duration: 0.8,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: "[data-list-heading]",
+          start: "top 85%",
+          once: true,
+        },
+      });
+      gsap.from("[data-list-row]", {
+        y: 28,
+        autoAlpha: 0,
+        filter: "blur(8px)",
+        duration: 0.7,
+        stagger: 0.07,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: "[data-list-rows]",
+          start: "top 85%",
+          once: true,
+        },
+      });
+
       // Картинка: мгновенный quickSetter — без сглаживания
       imgX.current = gsap.quickSetter("[data-follow-img]", "x", "px") as Setter;
       imgY.current = gsap.quickSetter("[data-follow-img]", "y", "px") as Setter;
@@ -131,17 +162,20 @@ export default function ArticlesList() {
       // круг уже схлопнулся в ничто, и там оставался мёртвый экран
       className="-mt-[18cm] bg-cream px-6 pb-40 pt-28 text-ink lg:px-10"
     >
-      <h2 className="type-display fs-display-m">On our minds</h2>
+      <h2 data-list-heading className="type-display fs-display-m">
+        On our minds
+      </h2>
 
       {/* Разделитель 1px currentColor только МЕЖДУ статьями (divide-y):
           у последней строки линии нет. Текст на ховер не анимируется. */}
-      <div className="mt-16 divide-y divide-current">
+      <div data-list-rows className="mt-16 divide-y divide-current">
         {POSTS.map((p) => (
           <article
             key={p.bold}
             // data-btn-hover: ховер на ЛЮБОЙ части строки запускает
             // swap-анимацию кнопки «Read now» (см. Button.tsx)
             data-btn-hover
+            data-list-row
             className="flex items-center gap-6 py-6"
             onMouseEnter={(e) => handleEnter(e, p.thumb)}
             onMouseMove={handleMove}

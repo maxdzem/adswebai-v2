@@ -93,9 +93,31 @@ export default function Contact() {
       gsap.from("[data-contact-el]", {
         y: 60,
         autoAlpha: 0,
+        filter: "blur(10px)",
         duration: 0.9,
         stagger: 0.12,
         ease: "power3.out",
+        scrollTrigger: { trigger: sectionRef.current, start: "top 72%", once: true },
+      });
+
+      // Аватар: 3D-вход — разворачивается из профиля с перспективой,
+      // пузырь следом мягко «надувается» из своего хвостика
+      gsap.from("[data-contact-avatar]", {
+        rotationY: -100,
+        autoAlpha: 0,
+        transformPerspective: 700,
+        duration: 0.9,
+        delay: 0.15,
+        ease: "power3.out",
+        scrollTrigger: { trigger: sectionRef.current, start: "top 72%", once: true },
+      });
+      gsap.from("[data-contact-bubble]", {
+        scale: 0.7,
+        autoAlpha: 0,
+        transformOrigin: "0% 100%",
+        duration: 0.6,
+        delay: 0.45,
+        ease: "back.out(1.6)",
         scrollTrigger: { trigger: sectionRef.current, start: "top 72%", once: true },
       });
     }, sectionRef);
@@ -192,10 +214,14 @@ export default function Contact() {
         <div className="relative">
           {/* Аватар + фиолетовый пузырь */}
           <div data-contact-el className="flex items-start gap-8">
-            <div className="grid h-24 w-24 shrink-0 place-items-center rounded-full bg-[#0c1b33] shadow-lg">
-              <span className="fs-label font-bold text-[#9ff2e2]">adswebai</span>
+            {/* Розовый круг-аватар (цвет круга с лендинга), 3D-вход при скролле */}
+            <div
+              data-contact-avatar
+              className="grid h-24 w-24 shrink-0 place-items-center rounded-full bg-blush shadow-lg"
+            >
+              <span className="fs-label font-bold text-ink">.adswebai</span>
             </div>
-            <div className="relative mt-10">
+            <div data-contact-bubble className="relative mt-10">
               <div className="fs-body-m max-w-md rounded-2xl bg-grape p-5 leading-relaxed text-white">
                 Hey 👋
                 <br />

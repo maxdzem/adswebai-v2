@@ -4,6 +4,7 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import SwapLink from "./SwapLink";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -61,9 +62,12 @@ export default function ServicesGrid() {
 
   useGSAP(
     () => {
+      // Мягкое «айфоновское» появление: лёгкий blur растворяется вместе
+      // с фейдом — заметно, но без вычурности
       gsap.from("[data-services-heading]", {
         y: 60,
         autoAlpha: 0,
+        filter: "blur(10px)",
         duration: 0.9,
         ease: "power3.out",
         scrollTrigger: { trigger: ref.current, start: "top 75%", once: true },
@@ -73,6 +77,7 @@ export default function ServicesGrid() {
         gsap.from(card, {
           y: 80,
           autoAlpha: 0,
+          filter: "blur(10px)",
           duration: 0.9,
           delay: i * 0.08,
           ease: "power3.out",
@@ -95,7 +100,14 @@ export default function ServicesGrid() {
 
       <div className="mt-20 grid grid-cols-1 gap-x-6 gap-y-16 sm:grid-cols-2 lg:grid-cols-4">
         {SERVICES.map((s) => (
-          <article key={s.n} data-service-card className={`relative ${s.offset}`}>
+          // data-btn-hover: ховер на любой части карточки запускает
+          // swap-анимацию стрелки в заголовке
+          <article
+            key={s.n}
+            data-service-card
+            data-btn-hover
+            className={`relative ${s.offset}`}
+          >
             <div className="relative">
               <span
                 aria-hidden
@@ -111,11 +123,10 @@ export default function ServicesGrid() {
 
             <p className="fs-label mt-6 font-medium text-ink/80">Solutions</p>
 
-            <h3 className="fs-body-m mt-2 flex items-center gap-3 font-bold leading-[1.15] tracking-normal">
-              {s.title}
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ink text-cream">
-                <Arrow />
-              </span>
+            {/* Механика Connect: слово уезжает вправо, круг-стрелка
+                появляется перед словом. Ховер-зона — вся карточка */}
+            <h3 className="fs-body-m mt-2 font-bold leading-[1.15] tracking-normal">
+              <SwapLink label={s.title} href={null} size={32} iconSize={12} />
             </h3>
 
             <p className="fs-label mt-3 max-w-[38ch] leading-relaxed text-ink/70">
