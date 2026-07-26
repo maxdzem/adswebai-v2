@@ -4,6 +4,7 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import LazyVideo from "./LazyVideo";
 import type { Dict } from "@/content/dict";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -56,13 +57,10 @@ export default function Hero({ dict }: { dict: Dict }) {
   return (
     // id="hero" — по нему Header понимает, что за ним ещё видео, и держится прозрачным
     <section id="hero" ref={ref} className="relative h-screen overflow-hidden bg-ink">
-      <video
-        className="absolute inset-0 h-full w-full object-cover"
+      <LazyVideo
         src="/Monks-Sizzle_1280x720.mp4"
-        autoPlay
-        muted
-        loop
-        playsInline
+        eager
+        className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-black/35" />
 

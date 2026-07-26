@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import gsap from "gsap";
 
 function ArrowIcon() {
@@ -38,7 +39,7 @@ type ButtonProps = {
  */
 export default function Button({
   label = "Read now",
-  href = "#",
+  href,
   className = "",
   colorClass = "bg-ink text-cream",
 }: ButtonProps) {
@@ -118,11 +119,26 @@ export default function Button({
     </>
   );
 
-  return href == null ? (
-    <span ref={setRef} className={baseClass}>
-      {inner}
-    </span>
-  ) : (
+  // Внутренние маршруты — через next/link: обычный <a> перезагружал
+  // всю страницу вместо клиентского перехода. Якоря и внешние ссылки
+  // остаются нативными.
+  if (href == null) {
+    return (
+      <span ref={setRef} className={baseClass}>
+        {inner}
+      </span>
+    );
+  }
+
+  if (href.startsWith("/")) {
+    return (
+      <Link ref={setRef} href={href} className={baseClass}>
+        {inner}
+      </Link>
+    );
+  }
+
+  return (
     <a ref={setRef} href={href} className={baseClass}>
       {inner}
     </a>

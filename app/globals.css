@@ -112,20 +112,24 @@ body {
 .subitem-dot {
   transform: translateY(-50%) scale(0);
 }
-.nav-item:hover .nav-dot {
+/* :focus-visible продублирован рядом с :hover — с клавиатуры пункт меню
+   должен отзываться так же, как под курсором */
+.nav-item:hover .nav-dot,
+.nav-item:focus-within .nav-dot {
   animation: dot-in 0.4s cubic-bezier(0.175, 0.9, 0.35, 1.5) 0s 1 forwards;
 }
-.nav-item:not(:hover) .nav-dot {
+.nav-item:not(:hover):not(:focus-within) .nav-dot {
   animation: dot-out 0.2s ease-in 0s 1 forwards;
 }
 .nav-item:hover .nav-label {
   animation: label-bounce 0.4s linear 0s 1;
 }
-.submenu-item:hover .subitem-dot {
+.submenu-item:hover .subitem-dot,
+.submenu-item:focus-within .subitem-dot {
   animation: subitem-dot-in 0.4s cubic-bezier(0.175, 0.9, 0.35, 1.5) 0s 1
     forwards;
 }
-.submenu-item:not(:hover) .subitem-dot {
+.submenu-item:not(:hover):not(:focus-within) .subitem-dot {
   animation: dot-out 0.2s ease-in 0s 1 forwards;
 }
 
@@ -145,6 +149,20 @@ html.lenis body {
 }
 .lenis.lenis-stopped {
   overflow: hidden;
+}
+
+/* Пользователь просил меньше движения: гасим декоративные анимации.
+   Полностью нулевую длительность не ставим — GSAP-твины с onComplete
+   должны отработать, иначе состояния зависнут на середине. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 ::selection {

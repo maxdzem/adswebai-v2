@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# adswebai
 
-## Getting Started
+Сайт adswebai: Next.js 16 (App Router) + Tailwind v4, плавный скролл на Lenis,
+анимации на GSAP/ScrollTrigger. Две локали — `en` и `ru`.
 
-First, run the development server:
+## Запуск
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
+npm run dev      # http://localhost:3000 → редирект на /en или /ru
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Проверки перед пушем:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run typecheck   # tsc --noEmit
+npm run lint
+npm run build       # статическая генерация всех страниц обеих локалей
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Структура
 
-## Learn More
+| Путь | Что внутри |
+| --- | --- |
+| `app/[lang]/` | Все страницы. `lang` — `en` \| `ru`, список из `content/i18n.ts`, `dynamicParams = false` |
+| `app/[lang]/page.tsx` | Главная (серверный компонент, собирает клиентские секции) |
+| `app/icon.tsx` | Фавикон, генерируется через `ImageResponse` |
+| `app/sitemap.ts`, `app/robots.ts` | Карта сайта с `hreflang` для обеих локалей |
+| `proxy.ts` | Бывший middleware (в Next 16 переименован): определяет локаль по `Accept-Language` и редиректит с `/` |
+| `components/` | Клиентские секции и анимации |
+| `content/` | Контент и словари: `dict.ts` (UI-строки), `site.*.ts`, `pages.ts`, `legal.*.ts`, `resolve.ts` (выбор версии по локали), `socials.ts` |
+| `public/` | Видео и статика |
 
-To learn more about Next.js, take a look at the following resources:
+## Локализация
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`content/dict.ts` держит английский словарь как источник истины, а тип `Dict`
+выводится из него — русская версия обязана иметь ровно тот же набор ключей,
+иначе сборка падает на типах. Ссылки строятся через `href(locale, path)`
+из `content/i18n.ts`, переключение языка — `swapLocale`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Анимации
 
-## Deploy on Vercel
+Lenis и GSAP инициализируются только в клиентских компонентах:
+`components/SmoothScroll.tsx` оборачивает дерево, остальные анимации живут
+внутри своих секций через `useGSAP`. В серверных `layout.tsx`/`page.tsx`
+ничего анимационного нет.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Везде учитывается `prefers-reduced-motion`: Lenis отключается, canvas-сцены
+не запускают RAF, видео не автоплеится.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Что ещё не подключено
+
+- Формы (контактная и newsletter) валидируются на клиенте и показывают
+  успех, но никуда не отправляются — нужен эндпоинт/CRM.
+- `content/socials.ts` пустой: иконки соцсетей в футере появятся, когда в
+  нём будут реальные адреса профилей.
+- Юридические документы в `/legal/*` — заглушки под `noindex`.

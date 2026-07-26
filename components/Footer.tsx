@@ -7,6 +7,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import { getLegalDocs } from "@/content/resolve";
 import { href, type Locale } from "@/content/i18n";
 import type { Dict } from "@/content/dict";
+import { SOCIAL_URLS, type SocialKey } from "@/content/socials";
 
 const buildBigLinks = (locale: Locale, dict: Dict) => [
   { label: dict.footer.links.whatWeDo, href: href(locale, "/what-we-do") },
@@ -48,8 +49,12 @@ function Arrow({ size = 12 }: { size?: number }) {
 }
 
 // ИЗМЕНЕНО: соцпиктограммы для нижнего ряда (TikTok, X, LinkedIn, Instagram)
-const SOCIALS: { label: string; icon: React.ReactNode }[] = [
+// Иконки соцсетей: адреса живут в content/socials.ts. Пока поле пустое,
+// иконка не рендерится — раньше все четыре висели с href="#" и клик по ним
+// просто отбрасывал наверх страницы.
+const SOCIALS: { key: SocialKey; label: string; icon: React.ReactNode }[] = [
   {
+    key: "tiktok",
     label: "TikTok",
     icon: (
       <svg width="12" height="12" viewBox="0 0 14 14" fill="currentColor" aria-hidden>
@@ -58,6 +63,7 @@ const SOCIALS: { label: string; icon: React.ReactNode }[] = [
     ),
   },
   {
+    key: "x",
     label: "X",
     icon: (
       <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden>
@@ -66,6 +72,7 @@ const SOCIALS: { label: string; icon: React.ReactNode }[] = [
     ),
   },
   {
+    key: "linkedin",
     label: "LinkedIn",
     icon: (
       <svg width="12" height="12" viewBox="0 0 14 14" fill="currentColor" aria-hidden>
@@ -76,6 +83,7 @@ const SOCIALS: { label: string; icon: React.ReactNode }[] = [
     ),
   },
   {
+    key: "instagram",
     label: "Instagram",
     icon: (
       <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden>
@@ -90,6 +98,8 @@ const SOCIALS: { label: string; icon: React.ReactNode }[] = [
 export default function Footer({ locale, dict }: { locale: Locale; dict: Dict }) {
   const BIG_LINKS = buildBigLinks(locale, dict);
   const SMALL_LINKS = buildSmallLinks(locale, dict);
+  // Показываем только те профили, адрес которых реально заполнен
+  const socials = SOCIALS.filter((s) => SOCIAL_URLS[s.key] !== "");
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
@@ -163,21 +173,25 @@ export default function Footer({ locale, dict }: { locale: Locale; dict: Dict })
           (3.5см → −0.5см от базовых 6rem), сама строка сохраняет
           1см воздуха сверху и не липнет к линии */}
       <div className="mt-[calc(6rem-0.5cm)] flex flex-col gap-10 border-t border-white/10 pt-[calc(2rem+1cm)] md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            {SOCIALS.map((s) => (
-              <a
-                key={s.label}
-                href="#"
-                aria-label={s.label}
-                className="grid h-9 w-9 place-items-center rounded-full border border-white/25 transition-all duration-300 hover:border-cream hover:bg-cream hover:text-ink"
-              >
-                {s.icon}
-              </a>
-            ))}
+        {socials.length > 0 && (
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              {socials.map((s) => (
+                <a
+                  key={s.key}
+                  href={SOCIAL_URLS[s.key]}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label={s.label}
+                  className="grid h-9 w-9 place-items-center rounded-full border border-white/25 transition-all duration-300 hover:border-cream hover:bg-cream hover:text-ink"
+                >
+                  {s.icon}
+                </a>
+              ))}
+            </div>
+            <span className="fs-label text-white/80">{dict.footer.followUs}</span>
           </div>
-          <span className="fs-label text-white/80">{dict.footer.followUs}</span>
-        </div>
+        )}
 
         {subscribed ? (
           <p className="fs-label text-white/60">{dict.footer.subscribed}</p>

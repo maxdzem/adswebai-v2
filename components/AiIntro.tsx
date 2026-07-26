@@ -12,7 +12,13 @@ import { href, type Locale } from "@/content/i18n";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-export default function AiIntro({ dict }: { dict: Dict }) {
+export default function AiIntro({
+  locale,
+  dict,
+}: {
+  locale: Locale;
+  dict: Dict;
+}) {
   const ref = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -115,7 +121,10 @@ export default function AiIntro({ dict }: { dict: Dict }) {
           </h3>
           <div className="mt-12 lg:pl-[14%]">
             {/* Та же swap-анимация, что у Connect в шапке */}
-            <Button label={dict.ai.explore} href="#" />
+            <Button
+              label={dict.ai.explore}
+              href={href(locale, "/services/ai-agents-automation")}
+            />
           </div>
         </div>
       </div>

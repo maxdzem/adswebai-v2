@@ -4,28 +4,22 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import Link from "next/link";
 import SwapLink from "./SwapLink";
+import LazyVideo from "./LazyVideo";
 
 import type { Dict } from "@/content/dict";
 import { href, type Locale } from "@/content/i18n";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-function Arrow() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden>
-      <path
-        d="M1 7h11m0 0L7.5 2.5M12 7l-4.5 4.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-export default function Expertise({ dict }: { dict: Dict }) {
+export default function Expertise({
+  locale,
+  dict,
+}: {
+  locale: Locale;
+  dict: Dict;
+}) {
   const ref = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -66,7 +60,12 @@ export default function Expertise({ dict }: { dict: Dict }) {
 
       <div className="mt-16 grid grid-cols-1 gap-x-6 gap-y-16 lg:grid-cols-12">
         {/* Case Study */}
-        <article data-exp-card data-btn-hover className="lg:col-span-5">
+        <Link
+          href={href(locale, "/work")}
+          data-exp-card
+          data-btn-hover
+          className="block lg:col-span-5"
+        >
           <div
             className="flex aspect-[16/11] w-full items-center justify-center"
             style={{
@@ -85,10 +84,15 @@ export default function Expertise({ dict }: { dict: Dict }) {
           <h3 className="fs-body-m mt-2 font-bold leading-[1.15] tracking-normal">
             <SwapLink label={dict.expertise.boomtown} href={null} size={32} iconSize={12} />
           </h3>
-        </article>
+        </Link>
 
         {/* Report */}
-        <article data-exp-card data-btn-hover className="lg:col-span-2 lg:col-start-7">
+        <Link
+          href={href(locale, "/thinking")}
+          data-exp-card
+          data-btn-hover
+          className="block lg:col-span-2 lg:col-start-7"
+        >
           <div
             className="aspect-square w-full"
             style={{
@@ -106,17 +110,18 @@ export default function Expertise({ dict }: { dict: Dict }) {
               className="max-w-full"
             />
           </h3>
-        </article>
+        </Link>
 
         {/* Video block */}
-        <article data-exp-card data-btn-hover className="lg:col-span-3 lg:col-start-10">
-          <video
-            className="aspect-[16/10] w-full object-cover"
+        <Link
+          href={href(locale, "/thinking")}
+          data-exp-card
+          data-btn-hover
+          className="block lg:col-span-3 lg:col-start-10"
+        >
+          <LazyVideo
             src="/SMS-Personalization.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
+            className="aspect-[16/10] w-full object-cover"
           />
           <p className="fs-label mt-5 font-medium text-ink/80">{dict.expertise.content}</p>
           <h3 className="fs-body-m mt-2 font-bold leading-[1.25] tracking-normal">
@@ -128,7 +133,7 @@ export default function Expertise({ dict }: { dict: Dict }) {
               className="max-w-full"
             />
           </h3>
-        </article>
+        </Link>
       </div>
     </section>
   );

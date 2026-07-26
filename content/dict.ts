@@ -101,6 +101,7 @@ const en = {
     flow: "adswebai.flow",
     agents: "Always-on AI Agents",
     play: "Play",
+    pause: "Pause",
   },
 
   articles: {
@@ -154,6 +155,8 @@ const en = {
     sent: "Your message is on its way. 👋",
     next: "Next",
     send: "Send",
+    errRequired: "Please fill this in before continuing.",
+    errEmail: "That does not look like a valid email address.",
     steps: {
       firstName: "First Name*",
       lastName: "Last Name*",
@@ -417,6 +420,7 @@ const ru: Dict = {
     flow: "adswebai.flow",
     agents: "Всегда доступные AI-агенты",
     play: "Воспроизвести",
+    pause: "Пауза",
   },
 
   articles: {
@@ -470,6 +474,8 @@ const ru: Dict = {
     sent: "Ваше сообщение отправлено. 👋",
     next: "Далее",
     send: "Отправить",
+    errRequired: "Заполните это поле, чтобы продолжить.",
+    errEmail: "Похоже, адрес почты введён неверно.",
     steps: {
       firstName: "Имя*",
       lastName: "Фамилия*",

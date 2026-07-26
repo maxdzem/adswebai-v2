@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 
+import LazyVideo from "./LazyVideo";
 import type { Dict } from "@/content/dict";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -14,6 +15,8 @@ export default function AnimatedCircle({ dict }: { dict: Dict }) {
   const circleRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const videoCircleRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(true);
 
   // useGSAP вместо useEffect: сам делает revert при размонтировании
   // и корректно переживает двойной вызов эффектов в StrictMode —
@@ -139,21 +142,35 @@ export default function AnimatedCircle({ dict }: { dict: Dict }) {
               ref={videoCircleRef}
               className="absolute left-1/2 top-1/2 aspect-square w-[32vw] max-w-[66vh] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full"
             >
-              <video
-                className="h-full w-full object-cover"
+              <LazyVideo
+                ref={videoRef}
                 src="/face-video.mp4"
-                autoPlay
-                muted
-                loop
-                playsInline
+                className="h-full w-full object-cover"
+                onPlayingChange={setPlaying}
               />
+              {/* pointer-events-auto: родительский sticky-слой отключает
+                  клики, иначе по кнопке было не попасть */}
               <button
-                aria-label={dict.circle.play}
-                className="absolute left-1/2 top-1/2 grid h-[70px] w-[70px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-black/40 text-white backdrop-blur-sm"
+                type="button"
+                onClick={() => {
+                  const v = videoRef.current;
+                  if (!v) return;
+                  if (v.paused) v.play().catch(() => {});
+                  else v.pause();
+                }}
+                aria-label={playing ? dict.circle.pause : dict.circle.play}
+                className="pointer-events-auto absolute left-1/2 top-1/2 grid h-[70px] w-[70px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-transform duration-300 hover:scale-105"
               >
-                <svg width="14" height="16" viewBox="0 0 14 16" fill="none" aria-hidden>
-                  <path d="M1 1.5v13L13 8 1 1.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                </svg>
+                {playing ? (
+                  <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor" aria-hidden>
+                    <rect x="1" y="1.5" width="4" height="13" />
+                    <rect x="9" y="1.5" width="4" height="13" />
+                  </svg>
+                ) : (
+                  <svg width="14" height="16" viewBox="0 0 14 16" fill="none" aria-hidden>
+                    <path d="M1 1.5v13L13 8 1 1.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                  </svg>
+                )}
               </button>
             </div>
           </div>

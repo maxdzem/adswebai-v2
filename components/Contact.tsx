@@ -82,8 +82,15 @@ export default function Contact({ dict }: { dict: Dict }) {
   const prevHeight = useRef(0);
 
   const [step, setStep] = useState(0);
+  // Пока идёт анимация ухода шага, submit заблокирован: иначе быстрый
+  // двойной клик успевал проскочить шаг, а на пределе — выйти за границы
+  // массива STEPS и уронить форму
+  const [busy, setBusy] = useState(false);
   const [values, setValues] = useState<Record<string, string>>({});
   const [sent, setSent] = useState(false);
+  // Текст ошибки: раньше о неудачной валидации сообщала только тряска
+  // карточки — скринридер и клавиатурный пользователь её не замечали
+  const [error, setError] = useState<string | null>(null);
 
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
@@ -167,13 +174,18 @@ export default function Contact({ dict }: { dict: Dict }) {
 
   // Уход текущего шага — новый ставится в onComplete, DOM не дёргается
   const leaveTo = (fn: () => void) => {
+    // Флаг ставится синхронно, до старта анимации
+    setBusy(true);
     prevHeight.current = cardRef.current?.offsetHeight ?? 0;
     gsap.to(fieldRef.current, {
       y: -26,
       autoAlpha: 0,
       duration: 0.28,
       ease: "power2.in",
-      onComplete: fn,
+      onComplete: () => {
+        fn();
+        setBusy(false);
+      },
     });
   };
 
@@ -187,21 +199,26 @@ export default function Contact({ dict }: { dict: Dict }) {
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!current) return;
+    if (!current || busy) return;
 
     const filled = value.trim().length > 0;
     const emailOk = current.type !== "email" || /^\S+@\S+\.\S+$/.test(value);
     if ((current.required && !filled) || !emailOk) {
+      setError(!filled ? dict.contact.errRequired : dict.contact.errEmail);
       shake();
+      inputRef.current?.focus({ preventScroll: true });
       return;
     }
+    setError(null);
 
     if (isLast) leaveTo(() => setSent(true));
-    else leaveTo(() => setStep((s) => s + 1));
+    else leaveTo(() => setStep((s) => Math.min(s + 1, STEPS.length - 1)));
   };
 
-  const setValue = (v: string) =>
+  const setValue = (v: string) => {
+    if (error) setError(null);
     setValues((prev) => ({ ...prev, [current.name]: v }));
+  };
 
   return (
     <section
@@ -257,8 +274,10 @@ export default function Contact({ dict }: { dict: Dict }) {
                     {dict.contact.sent}
                   </p>
                 ) : current.type === "radio" ? (
-                  <>
-                    <p className="fs-body-m text-ink/60">{current.label}</p>
+                  <fieldset>
+                    <legend className="fs-body-m text-ink/60">
+                      {current.label}
+                    </legend>
                     <div className="mt-5 space-y-3">
                       {current.options.map((opt) => {
                         const active = value === opt;
@@ -292,30 +311,57 @@ export default function Contact({ dict }: { dict: Dict }) {
                         );
                       })}
                     </div>
-                  </>
+                  </fieldset>
                 ) : current.type === "textarea" ? (
                   <>
-                    <p className="fs-body-m text-ink/60">{current.label}</p>
+                    <label
+                      htmlFor={current.name}
+                      className="fs-body-m block text-ink/60"
+                    >
+                      {current.label}
+                    </label>
                     <textarea
+                      id={current.name}
                       ref={inputRef as React.RefObject<HTMLTextAreaElement>}
                       value={value}
                       onChange={(e) => setValue(e.target.value)}
                       rows={4}
-                      className="fs-body-m mt-4 w-full resize-none bg-transparent text-ink focus:outline-none"
+                      aria-invalid={!!error}
+                      aria-describedby={error ? "contact-error" : undefined}
+                      className="fs-body-m mt-4 w-full resize-none bg-transparent text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink/40"
                     />
                   </>
                 ) : (
                   <>
-                    <p className="fs-body-m text-ink/60">{current.label}</p>
+                    <label
+                      htmlFor={current.name}
+                      className="fs-body-m block text-ink/60"
+                    >
+                      {current.label}
+                    </label>
                     <input
+                      id={current.name}
                       ref={inputRef as React.RefObject<HTMLInputElement>}
                       type={current.type}
                       value={value}
                       onChange={(e) => setValue(e.target.value)}
                       autoComplete="off"
-                      className="fs-body-m mt-1 w-full bg-transparent text-ink focus:outline-none"
+                      aria-invalid={!!error}
+                      aria-describedby={error ? "contact-error" : undefined}
+                      className="fs-body-m mt-1 w-full bg-transparent text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink/40"
                     />
                   </>
+                )}
+
+                {/* role=alert — скринридер зачитает ошибку сразу */}
+                {error && (
+                  <p
+                    id="contact-error"
+                    role="alert"
+                    className="fs-label mt-3 text-[#b3261e]"
+                  >
+                    {error}
+                  </p>
                 )}
               </div>
             </div>
@@ -340,8 +386,9 @@ export default function Contact({ dict }: { dict: Dict }) {
               {!sent && (
                 <button
                   type="submit"
+                  disabled={busy}
                   aria-label={isLast ? dict.contact.send : dict.contact.next}
-                  className={`grid h-[72px] w-[72px] place-items-center rounded-full shadow-[0_10px_30px_-16px_rgba(45,45,45,0.6)] transition-all duration-300 ${
+                  className={`grid h-[72px] w-[72px] place-items-center rounded-full shadow-[0_10px_30px_-16px_rgba(45,45,45,0.6)] transition-all duration-300 disabled:pointer-events-none disabled:opacity-60 ${
                     isLast
                       ? "bg-ink text-white hover:scale-105"
                       : "bg-white text-ink hover:scale-105"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
+import Link from "next/link";
 import gsap from "gsap";
 
 function ArrowIcon({ size = 12 }: { size?: number }) {
@@ -28,7 +29,7 @@ function ArrowIcon({ size = 12 }: { size?: number }) {
  */
 export default function SwapLink({
   label,
-  href = "#",
+  href,
   size = 32,
   gap = 12,
   iconSize = 12,
@@ -111,11 +112,24 @@ export default function SwapLink({
     </>
   );
 
-  return href == null ? (
-    <span ref={setRef} className={baseClass} style={{ gap }}>
-      {inner}
-    </span>
-  ) : (
+  // Внутренние маршруты — через next/link (см. Button.tsx)
+  if (href == null) {
+    return (
+      <span ref={setRef} className={baseClass} style={{ gap }}>
+        {inner}
+      </span>
+    );
+  }
+
+  if (href.startsWith("/")) {
+    return (
+      <Link ref={setRef} href={href} className={baseClass} style={{ gap }}>
+        {inner}
+      </Link>
+    );
+  }
+
+  return (
     <a ref={setRef} href={href} className={baseClass} style={{ gap }}>
       {inner}
     </a>

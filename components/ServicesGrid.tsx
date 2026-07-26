@@ -5,13 +5,16 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import SwapLink from "./SwapLink";
+import Link from "next/link";
 import type { Dict } from "@/content/dict";
+import { href, type Locale } from "@/content/i18n";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 const SERVICES = [
   {
     n: "01",
+    slug: "real-time-brands",
     title: "Real-Time Brands",
     copy: "Brands built as living systems to move at the speed of culture.",
     gradient: "linear-gradient(150deg, #1c130b 0%, #4a3014 55%, #0d0a07 100%)",
@@ -20,6 +23,7 @@ const SERVICES = [
   },
   {
     n: "02",
+    slug: "media-acceleration",
     title: "Media Acceleration",
     copy: "Unifying intelligence, content, media, and measurement into one performance system.",
     gradient: "linear-gradient(150deg, #23262c 0%, #14171b 60%, #0b0d10 100%)",
@@ -28,6 +32,7 @@ const SERVICES = [
   },
   {
     n: "03",
+    slug: "marketing-orchestration",
     title: "Marketing Orchestration",
     copy: "We collapse your content supply chain into one AI-powered system.",
     gradient: "linear-gradient(150deg, #101623 0%, #1d2b47 55%, #0a0e17 100%)",
@@ -36,6 +41,7 @@ const SERVICES = [
   },
   {
     n: "04",
+    slug: "ai-transformation",
     title: "AI Transformation",
     copy: "AI embedded across your business, from strategy to scale.",
     gradient: "linear-gradient(150deg, #171b1e 0%, #2c3a42 55%, #0e1113 100%)",
@@ -44,21 +50,13 @@ const SERVICES = [
   },
 ];
 
-function Arrow() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden>
-      <path
-        d="M1 7h11m0 0L7.5 2.5M12 7l-4.5 4.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-export default function ServicesGrid({ dict }: { dict: Dict }) {
+export default function ServicesGrid({
+  locale,
+  dict,
+}: {
+  locale: Locale;
+  dict: Dict;
+}) {
   // Тексты карточек берутся из словаря, визуал (градиенты, пропорции,
   // вертикальные сдвиги) остаётся в SERVICES
   const cards = SERVICES.map((s, i) => ({ ...s, ...dict.services.cards[i] }));
@@ -104,12 +102,15 @@ export default function ServicesGrid({ dict }: { dict: Dict }) {
       <div className="mt-20 grid grid-cols-1 gap-x-6 gap-y-16 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((s) => (
           // data-btn-hover: ховер на любой части карточки запускает
-          // swap-анимацию стрелки в заголовке
-          <article
+          // swap-анимацию стрелки в заголовке. Сама карточка ведёт на
+          // страницу своего решения — раньше стрелка обещала переход,
+          // которого не было
+          <Link
             key={s.n}
+            href={href(locale, `/solutions/${s.slug}`)}
             data-service-card
             data-btn-hover
-            className={`relative ${s.offset}`}
+            className={`relative block ${s.offset}`}
           >
             <div className="relative">
               <span
@@ -137,7 +138,7 @@ export default function ServicesGrid({ dict }: { dict: Dict }) {
             <p className="fs-label mt-3 max-w-[38ch] leading-relaxed text-ink/70">
               {s.copy}
             </p>
-          </article>
+          </Link>
         ))}
       </div>
     </section>

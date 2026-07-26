@@ -156,7 +156,32 @@ export default function CreativeHero({
     };
 
     resize();
-    raf = requestAnimationFrame(draw);
+
+    // Бесконечный RAF крутился всегда — даже когда баннер далеко за
+    // пределами экрана. Теперь кадры считаются только когда канвас виден
+    // и пользователь не просил уменьшить движение.
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let visible = false;
+
+    const start = () => {
+      if (raf || !visible || reduced.matches) return;
+      raf = requestAnimationFrame(draw);
+    };
+    const stop = () => {
+      if (!raf) return;
+      cancelAnimationFrame(raf);
+      raf = 0;
+    };
+
+    const io = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible) start();
+      else stop();
+    });
+    io.observe(canvas);
+
+    const onReduced = () => (reduced.matches ? stop() : start());
+    reduced.addEventListener("change", onReduced);
 
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
@@ -165,7 +190,9 @@ export default function CreativeHero({
     canvas.addEventListener("mouseleave", onLeave);
 
     return () => {
-      cancelAnimationFrame(raf);
+      stop();
+      io.disconnect();
+      reduced.removeEventListener("change", onReduced);
       ro.disconnect();
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMove);

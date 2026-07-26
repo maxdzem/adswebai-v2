@@ -23,11 +23,11 @@ export default async function Home({
   return (
     <main>
       <Hero dict={dict} />
-      <ServicesGrid dict={dict} />
-      <AiIntro dict={dict} />
-      <Expertise dict={dict} />
+      <ServicesGrid locale={lang} dict={dict} />
+      <AiIntro locale={lang} dict={dict} />
+      <Expertise locale={lang} dict={dict} />
       <AnimatedCircle dict={dict} />
-      <ArticlesList dict={dict} />
+      <ArticlesList locale={lang} dict={dict} />
       <Contact dict={dict} />
       <Footer locale={lang} dict={dict} />
     </main>

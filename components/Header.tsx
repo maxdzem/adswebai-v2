@@ -131,14 +131,29 @@ export default function Header({
   const tvRef = useRef<gsap.core.Timeline | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  // Какой пункт мобильного меню раскрыт (одновременно только один)
-  const [openSub, setOpenSub] = useState<string | null>(null);
   // Тёмный видео-герой есть только на главной. Определяем ПО МАРШРУТУ:
   // шапка живёт в layout и не перемонтируется при клиентских переходах,
   // поэтому разовая проверка DOM при маунте «залипала» на первом значении —
   // из-за этого на внутренних страницах логотип не розовел.
   const pathname = usePathname();
+
+  // Оверлей запоминает маршрут, на котором его открыли, и считается
+  // открытым только пока маршрут прежний. Так переход по ссылке закрывает
+  // меню сам, без useEffect с setState на смену pathname — тот вызывал
+  // лишний каскад рендеров (react-hooks/set-state-in-effect).
+  const [menu, setMenu] = useState({ open: false, at: pathname });
+  const menuOpen = menu.open && menu.at === pathname;
+  // Какой пункт мобильного меню раскрыт (одновременно только один)
+  const [openSub, setOpenSub] = useState<string | null>(null);
+
+  const setMenuOpen = (next: boolean | ((open: boolean) => boolean)) => {
+    setMenu((m) => {
+      const open = m.open && m.at === pathname;
+      return { open: typeof next === "function" ? next(open) : next, at: pathname };
+    });
+    // И открытие, и закрытие схлопывают аккордеон
+    setOpenSub(null);
+  };
   // Тёмный видео-герой есть только на главной каждой локали
   const darkHero = pathname === href(locale);
 
@@ -309,7 +324,6 @@ export default function Header({
       }
     }, menuRef);
 
-    if (!menuOpen) setOpenSub(null);
     document.documentElement.classList.toggle("lenis-stopped", menuOpen);
 
     return () => {
@@ -317,11 +331,6 @@ export default function Header({
       document.documentElement.classList.remove("lenis-stopped");
     };
   }, [menuOpen]);
-
-  // Переход по ссылке не должен оставлять оверлей открытым
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
 
   return (
     // Сам header всегда прозрачный: светлое полотно и линия — отдельные
@@ -410,9 +419,14 @@ export default function Header({
                     панель отодвинута mt-9 — мёртвой зоны под курсором нет.
                     По аудиту: появление — ЧИСТЫЙ fade за 0.08s, без слайда
                     (visibility+opacity вместо display, иначе fade не работает);
-                    тень всегда светлая rgba(255,255,255,.15) */}
+                    тень всегда светлая rgba(255,255,255,.15).
+                    group-focus-within — для клавиатуры: панель скрыта через
+                    visibility, поэтому ссылки внутри неё в таб-порядок не
+                    попадают. Фокус на самом пункте меню (он тоже внутри
+                    .group) раскрывает панель, и дальше Tab идёт по
+                    подпунктам, удерживая её открытой */}
                 {item.submenu && (
-                  <div className="invisible absolute -left-[30px] top-0 z-20 opacity-0 transition-opacity duration-[80ms] group-hover:visible group-hover:opacity-100">
+                  <div className="invisible absolute -left-[30px] top-0 z-20 opacity-0 transition-opacity duration-[80ms] group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
                     <ul className="mt-9 min-w-[155px] rounded-[4px] bg-ink px-[30px] py-[20px] text-[#E4E4E5] shadow-[0_20px_40px_-16px_rgba(255,255,255,0.15)]">
                       {item.submenu.map((sub) => (
                         <li
@@ -427,7 +441,7 @@ export default function Header({
                           {/* Текст уезжает вправо на 19px за 150мс */}
                           <Link
                             href={sub.href}
-                            className="block whitespace-nowrap py-[6px] transition-transform duration-150 group-hover/sub:translate-x-[19px]"
+                            className="block whitespace-nowrap py-[6px] transition-transform duration-150 group-hover/sub:translate-x-[19px] group-focus-within/sub:translate-x-[19px]"
                           >
                             {sub.label}
                           </Link>

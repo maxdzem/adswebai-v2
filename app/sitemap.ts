@@ -45,13 +45,16 @@ function pathsFor(locale: Locale): { path: string; priority: number; freq: Metad
   return [...staticPaths, ...solutionPaths, ...servicePaths];
 }
 
+/**
+ * lastModified намеренно отсутствует: даты правки по страницам мы нигде не
+ * храним, а проставлять всем `new Date()` — значит на каждом деплое
+ * заявлять поисковику, что обновился весь сайт. Такой сигнал он быстро
+ * перестаёт принимать всерьёз; лучше не давать его вовсе.
+ */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
-
   return LOCALES.flatMap((locale) =>
     pathsFor(locale).map(({ path, priority, freq }) => ({
       url: `${SITE_URL}${href(locale, path)}`,
-      lastModified,
       changeFrequency: freq,
       priority,
       alternates: {

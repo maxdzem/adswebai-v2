@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Button from "./Button";
 import type { Dict } from "@/content/dict";
+import { href, type Locale } from "@/content/i18n";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -59,7 +60,13 @@ const OFFSET_Y = -110;
 
 type Setter = (value: number) => void;
 
-export default function ArticlesList({ dict }: { dict: Dict }) {
+export default function ArticlesList({
+  locale,
+  dict,
+}: {
+  locale: Locale;
+  dict: Dict;
+}) {
   // Текст постов из словаря, градиенты превью остаются в POSTS
   const posts = POSTS.map((p, i) => ({ ...p, ...dict.articles.posts[i] }));
   const sectionRef = useRef<HTMLElement>(null);
@@ -181,14 +188,16 @@ export default function ArticlesList({ dict }: { dict: Dict }) {
             // swap-анимацию кнопки «Read now» (см. Button.tsx)
             data-btn-hover
             data-list-row
-            className="flex items-center gap-6 py-6"
+            className="flex flex-col gap-3 py-6 md:flex-row md:items-center md:gap-6"
             onMouseEnter={(e) => handleEnter(e, p.thumb)}
             onMouseMove={handleMove}
             onMouseLeave={handleLeave}
           >
-            <p className="fs-label w-44 shrink-0 font-medium">{p.kind}</p>
+            <p className="fs-label font-medium md:w-44 md:shrink-0">{p.kind}</p>
 
-            <h3 className="fs-body-m min-w-0 flex-1 truncate font-medium leading-[1.15]">
+            {/* truncate только с md: на мобильном заголовок переносится,
+                а не обрезается — иначе от него не оставалось ничего */}
+            <h3 className="fs-body-m min-w-0 font-medium leading-[1.15] md:flex-1 md:truncate">
               {p.bold}{" "}
               {/* По реверсу: em — антиква 400, font-style: normal (не курсив) */}
               <em className="fs-body-m font-serif font-normal not-italic">
@@ -196,11 +205,11 @@ export default function ArticlesList({ dict }: { dict: Dict }) {
               </em>
             </h3>
 
-            <p className="fs-label w-32 shrink-0 font-normal">
+            <p className="fs-label font-normal md:w-32 md:shrink-0">
               {p.read} {dict.common.minRead}
             </p>
 
-            <Button label={dict.common.readNow} />
+            <Button label={dict.common.readNow} href={href(locale, "/thinking")} />
           </article>
         ))}
       </div>
