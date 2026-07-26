@@ -1,0 +1,28 @@
+monks-clone — Дизайн-система (styles.txt)
+=========================================
+
+ЦВЕТА
+- Фон страницы (глобальный):            #000000
+- Текст на чёрном:                       #FFFFFF
+- Секция "Meet Sir Martin Sorrell" фон:  #FEAFE6   (снято пипеткой прямо из видео)
+- Текст на розовом:                      #111111
+- Кейс-секции (ориентир):                зелёный ~#BFE3C9, красные иконки ~#FF5A4D
+
+ШРИФТЫ
+- Основной: Inter — веса 400 / 500 / 700 / 800
+  (У monks в проде кастомный гротеск; Inter — близкая бесплатная замена.
+   Для максимального сходства смотри Roobert / PP Neue Montreal.)
+- Заголовки: 700-800, letter-spacing ~ -0.03em, line-height ~ 0.95
+- Текст:     400-500
+
+КРУГ (circle reveal)
+- Старт (маленький):   clip-path: circle(12% at 50% 50%)
+- Финал (как в видео): circle(75% at 50% 50%)     // крупный круг, НЕ фуллскрин
+- Финал (фуллскрин):   circle(100% at 50% 50%)    // если нужно на весь экран
+- Привязка:            GSAP ScrollTrigger, scrub: true
+- Обёртка:             height 300vh
+- Экран:               position sticky; top 0; height 100vh; overflow hidden
+
+БУКВЫ "monks"
+- Разъезжаются от центра: transform translate3d(±40vw, 0, 0) + opacity
+- Только transform — никаких left/right/width.

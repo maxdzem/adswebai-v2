@@ -1,26 +1,150 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Токены референса: --themed-background / --themed-foreground */
+  --color-cream: #eae8e4;
+  --color-ink: #2d2d2d;
+  --color-blush: #feafe6;
+  --color-grape: #4f2be8;
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-newsreader);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: #eae8e4;
+}
+
+/* Круг 150vmax шире вьюпорта: clip (не hidden!) срезает горизонтальный
+   оверфлоу, не ломая position: sticky и не создавая скролл-контейнер */
+html,
+body {
+  overflow-x: clip;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #eae8e4;
+  color: #2d2d2d;
+  font-family: var(--font-inter), "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* ── Типографическая шкала ────────────────────────────────────────────
+   Токены референса (fs-display-l/m/s, fs-body-l/m, fs-label),
+   увеличенные ровно в 1.2 раза по всем трём точкам clamp.           */
+.fs-display-l {
+  font-size: clamp(48px, 32px + 3.33333vw, 96px);
+}
+.fs-display-m {
+  font-size: clamp(30px, 16px + 2.91667vw, 72px);
+}
+.fs-display-s {
+  font-size: clamp(26px, 21.2px + 1.08333vw, 42px);
+}
+.fs-body-l {
+  font-size: clamp(24px, 22.4px + 0.33333vw, 29px);
+}
+.fs-body-m {
+  font-size: 22px;
+}
+.fs-label {
+  font-size: clamp(17px, 16px + 0.16667vw, 19px);
+}
+
+/* Начертание крупных заголовков: жирное, широкое, line-height 1.15 */
+.type-display {
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: normal;
+}
+
+/* ── Навигация (реверс n1-navigation) ─────────────────────────────────
+   Вся обратная связь ховера — движение, никаких смен цвета/прозрачности */
+@keyframes dot-in {
+  0% {
+    transform: translateY(-34px) scale(0);
+  }
+  1% {
+    transform: translateY(-34px) scale(1);
+  }
+  100% {
+    transform: translateY(-50%) scale(1);
+  }
+}
+@keyframes dot-out {
+  0% {
+    transform: translateY(-50%) scale(1);
+  }
+  100% {
+    transform: translateY(-50%) scale(0);
+  }
+}
+@keyframes subitem-dot-in {
+  0% {
+    transform: translateY(-18px) scale(0);
+  }
+  1% {
+    transform: translateY(-18px) scale(1);
+  }
+  100% {
+    transform: translateY(-50%) scale(1);
+  }
+}
+@keyframes label-bounce {
+  0%,
+  25% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  60% {
+    transform: translateY(32.5%);
+    animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  95% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53);
+  }
+}
+
+/* Точка-маркер пункта: «падает» сверху с перелётом, уходит схлопыванием */
+.nav-dot,
+.subitem-dot {
+  transform: translateY(-50%) scale(0);
+}
+.nav-item:hover .nav-dot {
+  animation: dot-in 0.4s cubic-bezier(0.175, 0.9, 0.35, 1.5) 0s 1 forwards;
+}
+.nav-item:not(:hover) .nav-dot {
+  animation: dot-out 0.2s ease-in 0s 1 forwards;
+}
+.nav-item:hover .nav-label {
+  animation: label-bounce 0.4s linear 0s 1;
+}
+.submenu-item:hover .subitem-dot {
+  animation: subitem-dot-in 0.4s cubic-bezier(0.175, 0.9, 0.35, 1.5) 0s 1
+    forwards;
+}
+.submenu-item:not(:hover) .subitem-dot {
+  animation: dot-out 0.2s ease-in 0s 1 forwards;
+}
+
+/* Outlined «ghost» letters in the pinned circle section */
+.ghost-letters {
+  color: transparent;
+  -webkit-text-stroke: 2px rgba(45, 45, 45, 0.28);
+}
+
+/* Lenis smooth-scroll recommended styles */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+::selection {
+  background: #feafe6;
+  color: #2d2d2d;
 }
