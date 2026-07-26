@@ -11,6 +11,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: SITE_URL, changeFrequency: "weekly", priority: 1 },
+    {
+      url: `${SITE_URL}/what-we-do`,
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
     { url: `${SITE_URL}/solutions`, changeFrequency: "monthly", priority: 0.9 },
     { url: `${SITE_URL}/services`, changeFrequency: "monthly", priority: 0.9 },
     {
@@ -19,6 +24,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     { url: `${SITE_URL}/work`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${SITE_URL}/partners`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_URL}/thinking`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.7 },
     {
       url: `${SITE_URL}/about/leadership`,

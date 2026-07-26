@@ -20,7 +20,7 @@ export default function ServicesIndex() {
   return (
     <IndexList
       eyebrow="Marketing Services"
-      title="Nine disciplines, one team"
+      title="Eleven disciplines, one team"
       lede={LEDE}
       base="/services"
       items={SERVICES}

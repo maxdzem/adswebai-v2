@@ -258,9 +258,11 @@ export default function LanguageSwitcher({
           className="fs-label group inline-flex items-center gap-3 rounded-full border border-white/30 px-5 py-2.5 transition-colors duration-300 hover:border-cream hover:bg-cream hover:text-ink"
         >
           Choose your language
+          {/* Стрелка указывает НАВЕРХ (-90°) — меню раскрывается вверх;
+              в открытом состоянии переворачивается вниз, на «свернуть» */}
           <span
             className={`grid h-7 w-7 place-items-center rounded-full border border-white/25 transition-all duration-300 group-hover:border-ink/40 ${
-              open ? "-rotate-90" : "rotate-90"
+              open ? "rotate-90" : "-rotate-90"
             }`}
           >
             <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden>

@@ -1,34 +1,25 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import SwapLink from "./SwapLink";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { LEGAL_DOCS } from "@/content/legal";
 
 const BIG_LINKS = [
-  "What We Do",
-  "Partners",
-  "Work",
-  "Careers",
-  "Thinking",
-  "Connect",
+  { label: "What We Do", href: "/what-we-do" },
+  { label: "Partners", href: "/partners" },
+  { label: "Work", href: "/work" },
+  { label: "Careers", href: "/about/careers" },
+  { label: "Thinking", href: "/thinking" },
+  { label: "Connect", href: "/contact" },
 ];
 
-// ИЗМЕНЕНО: полный список мелких ссылок, как на скриншоте футера
-const SMALL_LINKS = [
-  "An adswebai Company",
-  "Sustainability",
-  "Privacy Notice",
-  "Cookie Policy",
-  "Information Security & Compliance",
-  "Responsible Vulnerability Reporting Policy",
-  "Ethical Marketing Policy",
-  "Modern Slavery Statement",
-  "Code of Conduct",
-  "Anti-Hate Statement",
-  "Speak Up Policy",
-  "Accessibility Statement",
-  "Armed Forces Covenant",
-  "Land Acknowledgement",
+// Мелкие ссылки: «An adswebai Company» ведёт на About, остальные —
+// на реальные документы из content/legal.ts (порядок задаётся там же)
+const SMALL_LINKS: { label: string; href: string }[] = [
+  { label: "An adswebai Company", href: "/about" },
+  ...LEGAL_DOCS.map((d) => ({ label: d.title, href: `/legal/${d.slug}` })),
 ];
 
 function Arrow({ size = 12 }: { size?: number }) {
@@ -102,7 +93,8 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-ink px-6 pb-10 pt-20 text-cream lg:px-10">
+    // Фон футера — #191715 (глубже основного ink, как в референсе)
+    <footer className="bg-[#191715] px-6 pb-10 pt-20 text-cream lg:px-10">
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-12">
         <p className="fs-label text-white/60 lg:col-span-2">Keep Exploring...</p>
 
@@ -110,17 +102,17 @@ export default function Footer() {
           {BIG_LINKS.map((l) => (
             // Как пункты шапки: точка «падает» слева, слово подпрыгивает
             // (те же кейфреймы dot-in/dot-out/label-bounce из globals.css)
-            <a
-              key={l}
-              href="#"
-              className="nav-item fs-display-s relative block w-max py-1.5 font-medium leading-[1.15] tracking-normal"
+            <Link
+              key={l.href}
+              href={l.href}
+              className="nav-item relative block w-max py-1.5 text-[clamp(32px,26px+1.4vw,52px)] font-medium leading-[1.15] tracking-normal"
             >
               <span
                 aria-hidden
-                className="nav-dot pointer-events-none absolute -left-5 top-1/2 h-2 w-2 rounded-full bg-current"
+                className="nav-dot pointer-events-none absolute -left-6 top-1/2 h-2.5 w-2.5 rounded-full bg-current"
               />
-              <span className="nav-label inline-block">{l}</span>
-            </a>
+              <span className="nav-label inline-block">{l.label}</span>
+            </Link>
           ))}
         </nav>
 
@@ -128,15 +120,15 @@ export default function Footer() {
           {SMALL_LINKS.map((l) => (
             // Механика Connect: слово уезжает вправо, стрелка гаснет сзади
             // и её круг-дубль появляется ПЕРЕД словом
-            <div key={l} data-btn-hover className="py-1.5">
+            <div key={l.href} data-btn-hover className="py-1">
               <SwapLink
-                label={l}
-                href="#"
-                size={26}
-                gap={12}
-                iconSize={11}
+                label={l.label}
+                href={l.href}
+                size={30}
+                gap={14}
+                iconSize={12}
                 circleClass="border border-white/25 text-current"
-                className="text-[14px] font-medium"
+                className="text-[19px] font-medium leading-[1.35]"
               />
             </div>
           ))}

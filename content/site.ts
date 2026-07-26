@@ -383,6 +383,77 @@ export const SERVICES: ContentPage[] = [
       },
     ],
   },
+  {
+    slug: "ai-agents-automation",
+    title: "AI Agents & Automation",
+    eyebrow: "Service",
+    lede: "Agents and automated workflows that carry real operational load — messaging, qualification, routing and reporting — with a human accountable at every decision that matters.",
+    keywords: [
+      "ai agents",
+      "marketing automation",
+      "conversational ai",
+      "chatbots",
+      "workflow automation",
+      "telegram bot development",
+    ],
+    sections: [
+      {
+        heading: "What you get",
+        body: "Working automation in the places where your team currently loses hours: first-line enquiries, lead qualification, routing, and the reports someone assembles by hand every Monday. Deployed where your customers already are — web, WhatsApp, Telegram, email — rather than behind another login.",
+        bullets: [
+          "Conversational agents for enquiry handling and qualification",
+          "Messaging deployments across web, WhatsApp and Telegram",
+          "Workflow automation across CRM, ticketing and reporting",
+          "Retrieval over your own documents, with sources cited",
+          "Human handover rules and escalation paths",
+          "Evaluation harness so quality is measured, not assumed",
+        ],
+      },
+      {
+        heading: "How we work",
+        body: "We start by automating one narrow, high-volume path end to end and measuring it against how the work is done today. That is a deliberately small first scope: it is the only honest way to find out whether the automation improves the outcome or simply moves the failure somewhere less visible.",
+      },
+      {
+        heading: "What we are careful about",
+        body: "Anything customer-facing gets a defined escalation path to a person, and anything that touches money or a commitment stays under human approval. We will also say when a task is better solved by fixing a process than by adding a model to it — that answer comes up more often than the market admits.",
+      },
+    ],
+  },
+  {
+    slug: "web-platforms",
+    title: "Web Platforms",
+    eyebrow: "Service",
+    lede: "Sites and redesigns built as a system your team can extend: performance, search and content model settled before the first screen is designed.",
+    keywords: [
+      "web development",
+      "website redesign",
+      "cms",
+      "core web vitals",
+      "design system",
+    ],
+    sections: [
+      {
+        heading: "What you get",
+        body: "A site your team can actually run: a content model that matches how you publish, components that hold their shape when marketing edits them, and performance budgets enforced in the build rather than audited after launch.",
+        bullets: [
+          "Content model and CMS implementation",
+          "Design system and component library",
+          "Performance budgets and Core Web Vitals",
+          "Technical SEO and structured data built in",
+          "Analytics, consent and measurement wiring",
+          "Documented handover to your team",
+        ],
+      },
+      {
+        heading: "How we work",
+        body: "Redesigns start with what is already working. We instrument the current site first, so the rebuild is argued from behaviour rather than from taste — and so we can tell afterwards whether it actually helped.",
+      },
+      {
+        heading: "What we are careful about",
+        body: "We will often argue for a smaller build. A full replatform is expensive and rarely the real cause of the problem; where three fixes and a content model would get you most of the benefit, that is what we will recommend.",
+      },
+    ],
+  },
 ];
 
 /* ------------------------------------------------------------------ */
