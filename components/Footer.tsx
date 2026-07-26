@@ -107,9 +107,9 @@ export default function Footer({ locale, dict }: { locale: Locale; dict: Dict })
           {dict.footer.keepExploring}
         </p>
 
-        {/* ml-[11cm]: крупные ссылки отодвинуты от левого края —
+        {/* ml-[4.5cm]: крупные ссылки отодвинуты от левого края —
             заодно точка-маркер (-left-6) перестаёт упираться в границу */}
-        <nav className="lg:col-span-3 lg:ml-[11cm]">
+        <nav className="lg:col-span-3 lg:ml-[4.5cm]">
           {BIG_LINKS.map((l) => (
             // Как пункты шапки: точка «падает» слева, слово подпрыгивает
             // (те же кейфреймы dot-in/dot-out/label-bounce из globals.css)
@@ -127,11 +127,11 @@ export default function Footer({ locale, dict }: { locale: Locale; dict: Dict })
           ))}
         </nav>
 
-        {/* Колонка сдвинута вправо на 6cm (lg:ml-[6cm]). Ширина колонки
+        {/* Колонка сдвинута вправо на 10.5cm (lg:ml-[10.5cm]). Ширина колонки
             расширена до 6 из 12 — иначе длинные названия документов
             переносились бы после сдвига. Отступ только на lg: на мобильном
             колонка одна и сдвигать её некуда. */}
-        <div className="lg:col-span-6 lg:ml-[6cm]">
+        <div className="lg:col-span-6 lg:ml-[10.5cm]">
           {SMALL_LINKS.map((l) => (
             // Механика Connect: слово уезжает вправо, стрелка гаснет сзади
             // и её круг-дубль появляется ПЕРЕД словом
@@ -158,8 +158,11 @@ export default function Footer({ locale, dict }: { locale: Locale; dict: Dict })
         </div>
       </div>
 
-      {/* ИЗМЕНЕНО: нижний ряд по скриншоту — соцсети + Follow Us | Newsletter | копирайт */}
-      <div className="mt-24 flex flex-col gap-10 border-t border-white/10 pt-8 md:flex-row md:items-center md:justify-between">
+      {/* Нижний ряд: соцсети + Follow Us | Newsletter | копирайт.
+          Пустая тёмная зона перенесена из-под строки наверх (8см минус
+          срезанные 1.5см = 6.5см), поэтому под копирайтом снова обычный
+          отступ, а воздух оказался между блоком ссылок и этой строкой */}
+      <div className="mt-[calc(6rem+6.5cm)] flex flex-col gap-10 border-t border-white/10 pt-8 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             {SOCIALS.map((s) => (

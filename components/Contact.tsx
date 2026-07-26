@@ -201,9 +201,10 @@ export default function Contact({ dict }: { dict: Dict }) {
     <section
       id="connect"
       ref={sectionRef}
-      // pb-0 вместо pb-44: пустое поле под формой убрано, футер
-      // поднимается примерно на 5 см (176px здесь + 16px в самом футере)
-      className="bg-cream px-6 pb-0 pt-36 lg:px-10"
+      // pb-[2cm]: светлая зона под формой. Раньше здесь было pb-44 (≈4.6см),
+      // футер подняли до нуля, теперь 2 см возвращены светлому фону —
+      // ровно на столько же опускается граница с тёмным футером
+      className="bg-cream px-6 pb-[2cm] pt-36 lg:px-10"
     >
       <div className="grid grid-cols-1 gap-20 lg:grid-cols-2">
         <h2

@@ -62,21 +62,23 @@ function Panel({
           const active = l === locale;
           return (
             <li key={l}>
+              {/* Ховер: строка подсвечивается, название уезжает вправо,
+                  статус темнеет — видно, какой язык будет выбран */}
               <button
                 data-lang-item
                 type="button"
                 onClick={() => onPick(l)}
-                className="flex w-full items-baseline justify-between gap-8 py-2.5 text-left"
+                className="group -mx-3 flex w-full items-baseline justify-between gap-8 rounded-[10px] px-3 py-2.5 text-left transition-colors duration-200 hover:bg-ink/[0.07]"
               >
                 <span
-                  className={`fs-body-m ${
+                  className={`fs-body-m transition-transform duration-200 group-hover:translate-x-1.5 ${
                     active ? "font-medium text-ink" : "text-ink/80"
                   }`}
                 >
                   {LOCALE_LABEL[l]}
                 </span>
                 <span
-                  className={`fs-label shrink-0 ${
+                  className={`fs-label shrink-0 transition-colors duration-200 group-hover:text-ink/70 ${
                     active ? "text-ink/70" : "text-ink/45"
                   }`}
                 >
@@ -113,6 +115,9 @@ export default function LanguageSwitcher({
   const globeRef = useRef<HTMLSpanElement>(null);
   const labelRef = useRef<HTMLSpanElement>(null);
   const chevRef = useRef<HTMLButtonElement>(null);
+  // Футерная пилюля: подпись переключается с текущего языка на заголовок
+  const pillCurrentRef = useRef<HTMLSpanElement>(null);
+  const pillChooseRef = useRef<HTMLSpanElement>(null);
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -122,7 +127,7 @@ export default function LanguageSwitcher({
     const ctx = gsap.context(() => {
       gsap.set(panelRef.current, {
         autoAlpha: 0,
-        y: variant === "dot" ? -12 : 12,
+        y: -12,
         scale: 0.97,
       });
       gsap.set("[data-lang-item]", { autoAlpha: 0, y: 8 });
@@ -133,6 +138,10 @@ export default function LanguageSwitcher({
         gsap.set(globeRef.current, { autoAlpha: 1, scale: 1 });
         gsap.set(labelRef.current, { autoAlpha: 0, x: -10 });
         gsap.set(chevRef.current, { scale: 0, autoAlpha: 0 });
+      } else {
+        // Свёрнуто: видно текущий язык, заголовок скрыт под ним
+        gsap.set(pillCurrentRef.current, { autoAlpha: 1, y: 0 });
+        gsap.set(pillChooseRef.current, { autoAlpha: 0, y: 10 });
       }
     }, rootRef);
 
@@ -176,12 +185,32 @@ export default function LanguageSwitcher({
           });
         }
 
+        if (variant === "pill") {
+          // Подпись перелистывается: текущий язык уходит вверх,
+          // заголовок «Выберите язык» приходит снизу
+          gsap.to(pillCurrentRef.current, {
+            autoAlpha: 0,
+            y: -10,
+            duration: 0.22,
+            ease: "power2.in",
+            overwrite: "auto",
+          });
+          gsap.to(pillChooseRef.current, {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.32,
+            delay: 0.1,
+            ease: "power3.out",
+            overwrite: "auto",
+          });
+        }
+
         gsap.to(panelRef.current, {
           autoAlpha: 1,
           y: 0,
           scale: 1,
           duration: 0.35,
-          delay: variant === "dot" ? 0.14 : 0,
+          delay: variant === "dot" ? 0.14 : 0.06,
           ease: "power3.out",
           overwrite: "auto",
         });
@@ -195,48 +224,80 @@ export default function LanguageSwitcher({
           overwrite: "auto",
         });
       } else {
+        // Закрытие мягче открытия: элементы уходят по очереди, все
+        // изинги — inOut, поэтому движение не обрывается, а затухает
         if (variant === "dot") {
-          // Сворачивание в обратном порядке: сначала пилюля, потом глобус
           gsap.to(chevRef.current, {
             scale: 0,
             autoAlpha: 0,
-            duration: 0.18,
-            ease: "power2.in",
+            duration: 0.3,
+            ease: "power2.inOut",
             overwrite: "auto",
           });
           gsap.to(labelRef.current, {
             autoAlpha: 0,
-            x: -10,
-            duration: 0.15,
-            ease: "power2.in",
+            x: -8,
+            duration: 0.26,
+            ease: "power2.inOut",
             overwrite: "auto",
           });
+          // Пилюля сжимается неспешно и стартует, когда подпись уже угасла
           gsap.to(pillRef.current, {
             width: 44,
-            duration: 0.4,
-            delay: 0.08,
-            ease: "power3.inOut",
+            duration: 0.55,
+            delay: 0.16,
+            ease: "power2.inOut",
             overwrite: "auto",
           });
           gsap.to(globeRef.current, {
             autoAlpha: 1,
             scale: 1,
-            duration: 0.25,
-            delay: 0.22,
+            duration: 0.32,
+            delay: 0.38,
             ease: "power2.out",
             overwrite: "auto",
           });
         }
 
-        gsap.to(panelRef.current, {
+        if (variant === "pill") {
+          // Подпись перелистывается обратно: заголовок уходит вниз,
+          // текущий язык возвращается сверху
+          gsap.to(pillChooseRef.current, {
+            autoAlpha: 0,
+            y: 10,
+            duration: 0.28,
+            ease: "power2.inOut",
+            overwrite: "auto",
+          });
+          gsap.to(pillCurrentRef.current, {
+            autoAlpha: 1,
+            y: 0,
+            duration: 0.34,
+            delay: 0.14,
+            ease: "power2.out",
+            overwrite: "auto",
+          });
+        }
+
+        // Строки гаснут первыми, в обратном порядке — панель не
+        // «схлопывается» разом, а разбирается снизу вверх
+        gsap.to("[data-lang-item]", {
           autoAlpha: 0,
-          y: variant === "dot" ? -12 : 12,
-          scale: 0.97,
+          y: 6,
           duration: 0.22,
-          ease: "power2.in",
+          stagger: { each: 0.045, from: "end" },
+          ease: "power2.inOut",
           overwrite: "auto",
         });
-        gsap.set("[data-lang-item]", { autoAlpha: 0, y: 8, delay: 0.22 });
+        gsap.to(panelRef.current, {
+          autoAlpha: 0,
+          y: -10,
+          scale: 0.98,
+          duration: 0.38,
+          delay: 0.1,
+          ease: "power2.inOut",
+          overwrite: "auto",
+        });
       }
     }, rootRef);
 
@@ -278,7 +339,7 @@ export default function LanguageSwitcher({
         {/* Панель раскрывается вверх — футер стоит внизу страницы */}
         <div
           ref={panelRef}
-          className={`${panelClass} bottom-[calc(100%+14px)] right-0`}
+          className={`${panelClass} left-0 top-[calc(100%+14px)]`}
         >
           <Panel locale={locale} dict={dict} onPick={pick} />
         </div>
@@ -291,11 +352,26 @@ export default function LanguageSwitcher({
           aria-label={dict.lang.change}
           className="flex items-center gap-2"
         >
-          <span className="fs-label rounded-full bg-white/10 px-6 py-3 font-medium text-cream transition-colors duration-300 hover:bg-white/15">
-            {LOCALE_LABEL[locale]}
+          {/* Две подписи стопкой — при раскрытии они перелистываются */}
+          <span
+            className="relative grid h-12 items-center overflow-hidden rounded-full bg-white/10 px-6 text-left transition-colors duration-300 hover:bg-white/15"
+            style={{ width: PILL_W }}
+          >
+            <span
+              ref={pillCurrentRef}
+              className="fs-label absolute left-6 whitespace-nowrap font-medium text-cream"
+            >
+              {LOCALE_LABEL[locale]}
+            </span>
+            <span
+              ref={pillChooseRef}
+              className="fs-label absolute left-6 whitespace-nowrap font-medium text-cream opacity-0"
+            >
+              {dict.lang.choose}
+            </span>
           </span>
           <span
-            className={`grid h-12 w-12 place-items-center rounded-full bg-white/10 text-cream transition-all duration-300 hover:bg-white/15 ${
+            className={`grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white/10 text-cream transition-all duration-300 hover:bg-white/15 ${
               open ? "rotate-180" : ""
             }`}
           >
