@@ -43,5 +43,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# large local-only media (GitHub blocks >100MB)
-public/*.mp4
+# Видео лежат в репозитории: пережаты для веба (275МБ -> 17МБ, звук снят —
+# все ролики фоновые и стоят с muted). Оригиналы в C:\My Web Sites\_video-originals
