@@ -372,10 +372,15 @@ export default function LanguageSwitcher({
       <div ref={rootRef} className="relative">
         {/* Направление раскрытия задаётся placement: в футере панель
             уходит вниз, в мобильном оверлее — вверх, там до низа экрана
-            остаётся меньше её высоты */}
+            остаётся меньше её высоты.
+            По центру всего триггера (left-1/2 + translate), а не right-0:
+            right-0 выравнивал панель по правому краю круга-шеврона —
+            узкая панель (220px) против широкого триггера (пилюля+шеврон,
+            ~324px) повисала перекошенной вправо, никак не читаясь как
+            выпадение из-под самой кнопки */}
         <div
           ref={panelRef}
-          className={`${panelClass} right-0 ${
+          className={`${panelClass} left-1/2 -translate-x-1/2 ${
             placement === "up" ? "bottom-[calc(100%+14px)]" : "top-[calc(100%+14px)]"
           }`}
         >
