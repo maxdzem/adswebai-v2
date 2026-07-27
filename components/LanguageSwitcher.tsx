@@ -82,7 +82,7 @@ function Panel({
               type="button"
               onClick={() => onPick(l)}
               className={`group flex w-full items-center gap-2 text-left transition-colors duration-200 hover:bg-ink/[0.07] ${
-                square ? "rounded-none px-2.5 py-1.5" : "rounded-[8px] px-3.5 py-2"
+                square ? "rounded-none px-2.5 py-1" : "rounded-[8px] px-3.5 py-2"
               }`}
             >
               <span
@@ -93,7 +93,7 @@ function Panel({
               />
               <span
                 className={`transition-transform duration-200 group-hover:translate-x-1 ${
-                  square ? "text-[15px] leading-[18px]" : "fs-label"
+                  square ? "text-[15px] leading-[20px]" : "fs-label"
                 } ${active ? "font-medium text-ink" : "text-ink/70"}`}
               >
                 {LOCALE_LABEL[l]}
@@ -142,17 +142,28 @@ export default function LanguageSwitcher({
   // Стартовое состояние панели и свёрнутого триггера
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.set(panelRef.current, {
-        autoAlpha: 0,
-        y: placement === "up" ? 12 : -12,
-        scale: 0.97,
-      });
-      gsap.set("[data-lang-item]", { autoAlpha: 0, y: 8 });
-
       if (variant === "dot") {
+        // Панель — как ещё одна грань, откидывающаяся от правого борта
+        // куба: сложена по вертикальной оси у левого края (там, где она
+        // примыкает к кубу) и довёрнута на 90°, как и сам кубик рядом
+        gsap.set(panelRef.current, {
+          autoAlpha: 0,
+          rotationY: -90,
+          transformPerspective: 700,
+          transformOrigin: "left center",
+        });
         // Свёрнуто: значок стоит лицевой (розовой) гранью к зрителю
         gsap.set(cubeRef.current, { rotationX: 0 });
-      } else if (!compact) {
+      } else {
+        gsap.set(panelRef.current, {
+          autoAlpha: 0,
+          y: placement === "up" ? 12 : -12,
+          scale: 0.97,
+        });
+      }
+      gsap.set("[data-lang-item]", { autoAlpha: 0, y: 8 });
+
+      if (variant === "pill" && !compact) {
         // Свёрнуто: видно текущий язык, заголовок скрыт под ним.
         // В compact второй подписи нет — перелистывать нечего
         gsap.set(pillCurrentRef.current, { autoAlpha: 1, y: 0 });
@@ -203,15 +214,29 @@ export default function LanguageSwitcher({
           });
         }
 
-        gsap.to(panelRef.current, {
-          autoAlpha: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.35,
-          delay: variant === "dot" ? 0.14 : 0.06,
-          ease: "power3.out",
-          overwrite: "auto",
-        });
+        if (variant === "dot") {
+          // Панель откидывается от куба тем же движением, что и его
+          // собственная грань, — она стартует чуть позже, когда куб уже
+          // начал доворачиваться, и укладывается в те же 0.4с
+          gsap.to(panelRef.current, {
+            autoAlpha: 1,
+            rotationY: 0,
+            duration: 0.4,
+            delay: 0.08,
+            ease: "power2.out",
+            overwrite: "auto",
+          });
+        } else {
+          gsap.to(panelRef.current, {
+            autoAlpha: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.35,
+            delay: 0.06,
+            ease: "power3.out",
+            overwrite: "auto",
+          });
+        }
         gsap.to("[data-lang-item]", {
           autoAlpha: 1,
           y: 0,
@@ -264,15 +289,27 @@ export default function LanguageSwitcher({
           ease: "power2.inOut",
           overwrite: "auto",
         });
-        gsap.to(panelRef.current, {
-          autoAlpha: 0,
-          y: placement === "up" ? 10 : -10,
-          scale: 0.98,
-          duration: 0.38,
-          delay: 0.1,
-          ease: "power2.inOut",
-          overwrite: "auto",
-        });
+        if (variant === "dot") {
+          // Складывается обратно к кубу тем же движением, что открытие,
+          // но без задержки — сразу вслед за строками
+          gsap.to(panelRef.current, {
+            autoAlpha: 0,
+            rotationY: -90,
+            duration: 0.32,
+            ease: "power2.inOut",
+            overwrite: "auto",
+          });
+        } else {
+          gsap.to(panelRef.current, {
+            autoAlpha: 0,
+            y: placement === "up" ? 10 : -10,
+            scale: 0.98,
+            duration: 0.38,
+            delay: 0.1,
+            ease: "power2.inOut",
+            overwrite: "auto",
+          });
+        }
       }
     }, rootRef);
 
@@ -459,18 +496,18 @@ export default function LanguageSwitcher({
 
       {/* Панель раскрывается вправо от квадрата, вровень с его верхним
           краем (top: calc(50%-18px) — то же вычисление центра, что и у
-          самого куба, minus половина его высоты) и доходит РОВНО до
-          чёрной линии внизу шапки: rootRef 100px, запас от верха куба —
-          100% - 32px = 68px. h-[68px], а не max-h — панель всегда
-          заполняет это место целиком, а не заканчивается раньше времени
-          с двумя короткими языками. Шрифт и отступы строк подобраны
-          так, чтобы ровно в него укладываться (68 = 8 паддинг панели +
-          2 × 30 на строку); третий-четвёртый язык уйдут во внутренний
-          скролл, а не сдвинут низ панели за линию. Острые углы — как
-          у куба, не как у пилюли */}
+          самого куба, minus половина его высоты) и не доходит до чёрной
+          линии внизу шапки 4px (запас от верха куба — 100% - 32px = 68px,
+          но вплотную к линии панель визуально с ней сливалась — граница
+          читалась как «залезает»). h-[64px], а не max-h — панель всегда
+          заполняет это место целиком. Шрифт и отступы строк подобраны
+          так, чтобы ровно укладываться (64 = 8 паддинг панели + 2 × 28
+          на строку); третий-четвёртый язык уйдут во внутренний скролл,
+          а не сдвинут низ панели к линии. Острые углы — как у куба,
+          не как у пилюли */}
       <div
         ref={panelRef}
-        className={`${panelClass} overflow-y-auto rounded-none left-[calc(100%+14px)] top-[calc(50%-18px)] h-[68px]`}
+        className={`${panelClass} overflow-y-auto rounded-none left-[calc(100%+14px)] top-[calc(50%-18px)] h-[64px]`}
       >
         <Panel locale={locale} onPick={pick} square />
       </div>
