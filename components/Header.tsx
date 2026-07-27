@@ -688,10 +688,14 @@ export default function Header({
           </ul>
         </nav>
 
-        {/* Connect — по центру под списком. Фон оверлея всегда тёмный,
+        {/* Connect — по центру под списком, крупнее остальных пунктов:
+            это единственный CTA в оверлее. Фон оверлея всегда тёмный,
             поэтому цвет пилюли фиксированный и не зависит от
-            scrolled/darkHero, как в шапке */}
-        <div data-menu-item className="mt-8 flex justify-center">
+            scrolled/darkHero, как в шапке. size="lg" + active:scale
+            в Button — тактильный отклик на тап, раньше кнопка вообще
+            никак не реагировала на нажатие на тач-экране: JS-анимация
+            стрелки нарочно не биндится без настоящего курсора */}
+        <div data-menu-item className="mt-10 flex justify-center">
           <Link
             href={href(locale, "/contact")}
             onClick={() => setMenuOpen(false)}
@@ -701,6 +705,7 @@ export default function Header({
             <Button
               label={dict.nav.connect}
               href={null}
+              size="lg"
               colorClass="bg-cream text-ink"
             />
           </Link>

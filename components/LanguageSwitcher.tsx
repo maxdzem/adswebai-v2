@@ -60,22 +60,30 @@ function Panel({
   onPick: (l: Locale) => void;
 }) {
   return (
-    <ul className="p-2">
+    <ul className="p-1.5">
       {LOCALES.map((l) => {
         const active = l === locale;
         return (
           <li key={l}>
-            {/* Ховер: строка подсвечивается, название уезжает вправо —
-                видно, какой язык будет выбран */}
+            {/* fs-label вместо fs-body-m: тот фиксирован на 22px — для
+                строки в компактном списке слишком крупно и рыхло.
+                Активный язык теперь помечен точкой слева, а не только
+                весом шрифта — заметнее с первого взгляда */}
             <button
               data-lang-item
               type="button"
               onClick={() => onPick(l)}
-              className="group flex w-full rounded-[10px] px-4 py-2.5 text-left transition-colors duration-200 hover:bg-ink/[0.07]"
+              className="group flex w-full items-center gap-2.5 rounded-[8px] px-3.5 py-2 text-left transition-colors duration-200 hover:bg-ink/[0.07]"
             >
               <span
-                className={`fs-body-m transition-transform duration-200 group-hover:translate-x-1.5 ${
-                  active ? "font-medium text-ink" : "text-ink/80"
+                aria-hidden
+                className={`h-1.5 w-1.5 shrink-0 rounded-full bg-ink transition-opacity duration-200 ${
+                  active ? "opacity-100" : "opacity-0"
+                }`}
+              />
+              <span
+                className={`fs-label transition-transform duration-200 group-hover:translate-x-1 ${
+                  active ? "font-medium text-ink" : "text-ink/70"
                 }`}
               >
                 {LOCALE_LABEL[l]}
