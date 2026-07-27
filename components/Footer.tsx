@@ -119,7 +119,9 @@ export default function Footer({ locale, dict }: { locale: Locale; dict: Dict })
 
         {/* ml-[4.5cm]: крупные ссылки отодвинуты от левого края —
             заодно точка-маркер (-left-6) перестаёт упираться в границу */}
-        <nav className="lg:col-span-3 lg:ml-[4.5cm]">
+        {/* pl-6 на мобильном — место для точки-маркера (-left-6):
+            без него она вылезала ровно на левый край экрана */}
+        <nav className="pl-6 lg:col-span-3 lg:ml-[4.5cm] lg:pl-0">
           {BIG_LINKS.map((l) => (
             // Как пункты шапки: точка «падает» слева, слово подпрыгивает
             // (те же кейфреймы dot-in/dot-out/label-bounce из globals.css)
@@ -196,20 +198,22 @@ export default function Footer({ locale, dict }: { locale: Locale; dict: Dict })
         {subscribed ? (
           <p className="fs-label text-white/60">{dict.footer.subscribed}</p>
         ) : (
-          <form onSubmit={onSubscribe} className="group flex items-center gap-3">
+          // flex-wrap: при 375px «Newsletter» + поле + кнопка не влезали
+          // в 327px, и круглая кнопка сплющивалась в овал
+          <form onSubmit={onSubscribe} className="group flex flex-wrap items-center gap-3">
             <span className="fs-label font-medium">{dict.footer.newsletter}</span>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={dict.footer.emailPlaceholder}
-              className="fs-label w-60 border-b border-white/40 bg-transparent py-2 placeholder:text-white/50 focus:border-white focus:outline-none"
+              className="fs-label w-full min-w-0 flex-1 border-b border-white/40 bg-transparent py-2 placeholder:text-white/50 focus:border-white focus:outline-none sm:w-60 sm:flex-none"
             />
             {/* ИЗМЕНЕНО: hover — стрелка подписки уезжает вправо, фон меняет оттенок */}
             <button
               type="submit"
               aria-label={dict.footer.subscribe}
-              className="grid h-10 w-10 place-items-center rounded-full bg-cream text-ink transition-all duration-300 hover:translate-x-1 hover:bg-white"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-cream text-ink transition-all duration-300 hover:translate-x-1 hover:bg-white"
             >
               <Arrow />
             </button>

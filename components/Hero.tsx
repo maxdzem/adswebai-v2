@@ -56,7 +56,11 @@ export default function Hero({ dict }: { dict: Dict }) {
 
   return (
     // id="hero" — по нему Header понимает, что за ним ещё видео, и держится прозрачным
-    <section id="hero" ref={ref} className="relative h-screen overflow-hidden bg-ink">
+    // h-[100svh], а не h-screen: vh в мобильных браузерах равен большому
+    // вьюпорту (адресная строка спрятана), поэтому подсказка «Scroll»
+    // у нижнего края оказывалась под хромом браузера — ровно в момент,
+    // когда она нужна
+    <section id="hero" ref={ref} className="relative h-[100svh] overflow-hidden bg-ink">
       <LazyVideo
         src="/Monks-Sizzle_1280x720.mp4"
         eager

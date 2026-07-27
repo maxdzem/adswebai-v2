@@ -126,10 +126,18 @@ export default function Header({
 }) {
   const NAV = buildNav(locale, dict);
   const ref = useRef<HTMLElement>(null);
+  // Всё, что уезжает вверх при скролле, живёт в barRef, а не в <header>.
+  // Причина: GSAP оставляет на анимированном элементе transform (даже
+  // нулевой — translate(0, 0)), а элемент с transform становится
+  // containing block для position: fixed потомков. Пока твины висели на
+  // <header>, мобильный оверлей с inset-0 растягивался не по вьюпорту,
+  // а по 100-пиксельной полосе шапки — отсюда «плывёт и ничего не видно».
+  const barRef = useRef<HTMLDivElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
   const lineRef = useRef<HTMLDivElement>(null);
   const tvRef = useRef<gsap.core.Timeline | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuTl = useRef<gsap.core.Timeline | null>(null);
   const [scrolled, setScrolled] = useState(false);
   // Тёмный видео-герой есть только на главной. Определяем ПО МАРШРУТУ:
   // шапка живёт в layout и не перемонтируется при клиентских переходах,
@@ -162,7 +170,7 @@ export default function Header({
       // Intro: контейнер 0.3s, пункты всплывают y:+30 за 0.5s, stagger 0.05
       gsap
         .timeline()
-        .from(ref.current, { autoAlpha: 0, duration: 0.3 })
+        .from(barRef.current, { autoAlpha: 0, duration: 0.3 })
         .from(
           "[data-nav-item]",
           {
@@ -179,7 +187,7 @@ export default function Header({
       // Smart header: скрытие при скролле вниз, выезд при скролле вверх —
       // твин 0.5s power2.out (как sticky-твин референса)
       const showAnim = gsap
-        .from(ref.current, {
+        .from(barRef.current, {
           yPercent: -100,
           paused: true,
           duration: 0.5,
@@ -264,73 +272,95 @@ export default function Header({
     else tv.play();
   }, [scrolled]);
 
-  // Мобильное меню: эллиптическая маска раскрывается из точки у бургера,
-  // пункты подтягиваются каскадом. Прокрутка страницы под оверлеем
-  // блокируется классом lenis-stopped — он уже описан в globals.css
-  // и корректно останавливает именно Lenis, а не только нативный скролл.
+  // Мобильное меню: ОДИН постоянный таймлайн, вперёд на открытие и
+  // реверсом на закрытие.
+  //
+  // Раньше твины пересоздавались на каждый тоггл внутри gsap.context, а его
+  // cleanup вызывал ctx.revert() — тот срывал инлайновые стили ещё ДО старта
+  // закрытия, поэтому анимации закрытия фактически не было: меню схлопывалось
+  // за один кадр, а быстрые клики рвали её посередине. Реверс даёт
+  // симметричное закрытие бесплатно и переживает любой темп кликов.
+  useGSAP(
+    () => {
+      const el = menuRef.current;
+      if (!el) return;
+
+      const mm = gsap.matchMedia();
+
+      mm.add(
+        {
+          motion: "(prefers-reduced-motion: no-preference)",
+          reduce: "(prefers-reduced-motion: reduce)",
+        },
+        (ctx) => {
+          const reduce = !!(ctx.conditions as { reduce: boolean }).reduce;
+
+          const tl = gsap.timeline({
+            paused: true,
+            onReverseComplete: () => gsap.set(el, { visibility: "hidden" }),
+          });
+
+          tl.fromTo(
+            el,
+            { "--m-rx": "0%", "--m-ry": "0%" },
+            {
+              "--m-rx": "150%",
+              "--m-ry": "150%",
+              duration: reduce ? 0.12 : 0.6,
+              ease: reduce ? "none" : "power2.out",
+            },
+            0
+          )
+            // amount вместо each: суммарный разбег фиксирован, сколько бы
+            // пунктов ни было в локали
+            .fromTo(
+              "[data-menu-item]",
+              { autoAlpha: 0, y: reduce ? 0 : 12 },
+              {
+                autoAlpha: 1,
+                y: 0,
+                duration: reduce ? 0.12 : 0.4,
+                ease: "power2.out",
+                stagger: { amount: reduce ? 0 : 0.18 },
+              },
+              reduce ? 0 : 0.12
+            );
+
+          menuTl.current = tl;
+          return () => {
+            menuTl.current = null;
+          };
+        }
+      );
+
+      return () => mm.revert();
+    },
+    { scope: menuRef }
+  );
+
+  // Прокрутка страницы под оверлеем блокируется классом lenis-stopped —
+  // он описан в globals.css и останавливает именно Lenis.
   useEffect(() => {
     const el = menuRef.current;
-    if (!el) return;
+    const tl = menuTl.current;
 
-    const ctx = gsap.context(() => {
+    if (el && tl) {
       if (menuOpen) {
         gsap.set(el, { visibility: "visible" });
-        gsap.to(el, {
-          "--m-rx": "150%",
-          "--m-ry": "150%",
-          duration: 0.75,
-          ease: "power3.inOut",
-          overwrite: "auto",
-        });
-        gsap.to(el, {
-          "--m-cx": "50%",
-          "--m-cy": "45%",
-          duration: 0.8,
-          ease: "back.out(0.5)",
-          overwrite: "auto",
-        });
-        gsap.fromTo(
-          "[data-menu-item]",
-          { autoAlpha: 0, y: 24 },
-          {
-            autoAlpha: 1,
-            y: 0,
-            duration: 0.5,
-            stagger: 0.06,
-            delay: 0.18,
-            ease: "power3.out",
-            overwrite: "auto",
-          }
-        );
+        tl.timeScale(1).play();
       } else {
-        gsap.to("[data-menu-item]", {
-          autoAlpha: 0,
-          y: 16,
-          duration: 0.2,
-          ease: "power2.in",
-          overwrite: "auto",
-        });
-        gsap.to(el, {
-          "--m-rx": "0%",
-          "--m-ry": "0%",
-          "--m-cx": "88%",
-          "--m-cy": "4%",
-          duration: 0.5,
-          delay: 0.08,
-          ease: "power3.inOut",
-          overwrite: "auto",
-          onComplete: () => gsap.set(el, { visibility: "hidden" }),
-        });
+        // Закрытие в 1.6 раза быстрее открытия — уходить меню должно резче
+        tl.timeScale(1.6).reverse();
       }
-    }, menuRef);
+    }
 
     document.documentElement.classList.toggle("lenis-stopped", menuOpen);
-
-    return () => {
-      ctx.revert();
-      document.documentElement.classList.remove("lenis-stopped");
-    };
   }, [menuOpen]);
+
+  useEffect(
+    () => () => document.documentElement.classList.remove("lenis-stopped"),
+    []
+  );
 
   return (
     // Сам header всегда прозрачный: светлое полотно и линия — отдельные
@@ -345,6 +375,12 @@ export default function Header({
         scrolled || !darkHero ? "text-ink" : "text-cream"
       }`}
     >
+      {/* Обёртка со всеми слоями шапки. Именно она ездит по Y и гаснет —
+          transform остаётся здесь, а <header> без него, чтобы мобильный
+          оверлей ниже мерил inset-0 по вьюпорту. z-index: auto —
+          собственного контекста наложения не создаёт, порядок
+          (полосы -z-10 → бар → оверлей z-40 → бургер z-50) сохраняется */}
+      <div ref={barRef} className="relative">
       {/* Светлое полотно шапки: 7 горизонтальных полос-«пикселей»,
           при выключении они дёргаются вбок и рвутся глитчем */}
       <div ref={bgRef} aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
@@ -371,6 +407,7 @@ export default function Header({
         <Link
           href={href(locale)}
           data-nav-item
+          data-header-logo
           aria-label={dict.nav.home}
           className={`justify-self-start text-[32px] font-black tracking-normal transition-colors duration-300 ${
             darkHero || scrolled ? "" : "text-blush"
@@ -456,11 +493,14 @@ export default function Header({
 
           {/* Connect: та же swap-анимация, что у «Read now»;
               ховер-зона — вся ссылка (data-btn-hover) */}
+          {/* На мобильном Connect живёт в баре самого меню (ниже):
+              в 375px-строке пилюля 144px не помещалась рядом с логотипом
+              и бургером и всё сжимала */}
           <Link
             href={href(locale, "/contact")}
             data-btn-hover
             data-nav-item
-            className="block"
+            className="hidden lg:block"
           >
             {/* На светлой шапке: область #222824, надпись и стрелка белые.
                 На прозрачной поверх тёмного видео — кремовая с тёмным текстом.
@@ -479,14 +519,19 @@ export default function Header({
 
           {/* Бургер — только на мобильных. По референсу: три линии 34px,
               hit-area 48×48, переход .3s cubic-bezier(.455,.03,.515,.955).
-              В открытом состоянии складывается в крестик. */}
+              В открытом состоянии складывается в крестик.
+              При открытом меню полоски всегда кремовые: bg-current брал
+              цвет шапки, и на внутренних страницах крестик выходил
+              #2d2d2d на фоне оверлея #191715 — его было не разглядеть. */}
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={menuOpen ? dict.nav.menuClose : dict.nav.menuOpen}
             aria-expanded={menuOpen}
             data-nav-item
-            className="relative z-50 h-[20px] w-[40px] shrink-0 after:absolute after:-inset-x-[4px] after:-inset-y-[14px] after:content-[''] lg:hidden"
+            className={`relative z-50 h-[20px] w-[40px] shrink-0 transition-colors duration-300 after:absolute after:-inset-x-[4px] after:-inset-y-[14px] after:content-[''] lg:hidden ${
+              menuOpen ? "text-cream" : ""
+            }`}
           >
             {[0, 1, 2].map((i) => (
               <span
@@ -506,31 +551,61 @@ export default function Header({
               />
             ))}
           </button>
+          </div>
         </div>
       </div>
 
       {/* Мобильный оверлей: раскрывается эллиптической маской из точки
-          у бургера — приём из референса. Радиусы и центр лежат в CSS-
-          переменных, их анимирует GSAP. Список по центру экрана, как
-          в референсе: крупные строки с кружком справа — шеврон у пунктов
+          у бургера — приём из референса. Радиус лежит в CSS-переменной,
+          её анимирует GSAP. Свой бар сверху (Меню + Connect), список
+          по центру: крупные строки с кружком справа — шеврон у пунктов
           с подменю, стрелка у прямых ссылок. */}
       <div
         ref={menuRef}
-        className="invisible fixed inset-0 z-40 flex flex-col justify-center overflow-y-auto bg-[#191715] px-6 text-cream lg:hidden"
+        className="invisible fixed inset-x-0 top-0 z-40 flex h-[100dvh] flex-col overflow-y-auto overscroll-contain bg-[#191715] px-6 text-cream lg:hidden"
         style={{
-          clipPath:
-            "ellipse(var(--m-rx, 0%) var(--m-ry, 0%) at var(--m-cx, 88%) var(--m-cy, 4%))",
+          // Центр эллипса больше не едет — только радиусы. 150% с запасом
+          // накрывают дальний угол (нужно ≥128%), а прежний проезд центра
+          // с back.out давал перелёт и возврат: это и «плыло»
+          clipPath: "ellipse(var(--m-rx, 0%) var(--m-ry, 0%) at 88% 7.5%)",
         }}
       >
-        {/* Подпись «Меню» слева сверху — крестик справа делает сам бургер,
-            он лежит выше оверлея по z-index и складывается в X */}
-        <span
+        {/* Собственный бар меню той же высоты 100px, что и шапка: подпись
+            «Меню» слева, кнопка Connect справа. pr-[64px] — коридор под
+            крестик: он лежит на z-50 поверх оверлея, его хит-зона
+            начинается в 68px от правого края, контент бара кончается
+            в 88px — зазор 20px на любой ширине экрана */}
+        <div
           data-menu-item
-          className="fs-label absolute left-6 top-[38px] font-medium"
+          className="flex h-[100px] shrink-0 items-center justify-end gap-4 pr-[64px]"
         >
-          {dict.nav.menu}
-        </span>
+          {/* Ниже 360px подпись уходит: иначе «Связаться» не помещается */}
+          <span className="fs-label mr-auto hidden font-medium min-[360px]:inline">
+            {dict.nav.menu}
+          </span>
 
+          {/* Фон оверлея всегда тёмный, поэтому цвет пилюли фиксированный
+              и не зависит от scrolled/darkHero, как в шапке */}
+          <Link
+            href={href(locale, "/contact")}
+            onClick={() => setMenuOpen(false)}
+            data-btn-hover
+            className="block shrink-0"
+          >
+            <Button
+              label={dict.nav.connect}
+              href={null}
+              colorClass="bg-cream text-ink"
+            />
+          </Link>
+        </div>
+
+        {/* my-auto вместо justify-center на родителе: пока места хватает,
+            список стоит оптически по центру, а когда контент выше экрана,
+            авто-поля схлопываются в ноль и всё доскроливается.
+            justify-center так не умеет — верх контента уезжал
+            за scrollTop: 0 и был недостижим */}
+        <div className="my-auto w-full shrink-0 py-4">
         <nav>
           <ul>
             {NAV.map((item) => {
@@ -601,33 +676,24 @@ export default function Header({
               );
             })}
 
-            {/* Connect — последней строкой, как в референсе */}
-            <li data-menu-item className="border-b border-cream/15">
-              <div className="flex items-center justify-between gap-4 py-5">
-                <Link
-                  href={href(locale, "/contact")}
-                  onClick={() => setMenuOpen(false)}
-                  className="text-[30px] font-bold leading-[1.1] tracking-normal"
-                >
-                  {dict.nav.connect}
-                </Link>
-                <Link
-                  href={href(locale, "/contact")}
-                  onClick={() => setMenuOpen(false)}
-                  aria-hidden
-                  tabIndex={-1}
-                  className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/10 transition-colors duration-300 hover:bg-white/15"
-                >
-                  <ArrowRight />
-                </Link>
-              </div>
-            </li>
+            {/* Connect отдельной строкой больше нет: он переехал в бар
+                меню выше. Список короче на 85px — на экране 375×667
+                шесть строк со свитчером теперь помещаются без скролла */}
           </ul>
         </nav>
 
-        {/* Переключатель языка — по центру под списком */}
-        <div data-menu-item className="mt-12 flex justify-center">
-          <LanguageSwitcher locale={locale} dict={dict} />
+        {/* Переключатель языка — по центру под списком. variant="pill":
+            вариант-точка меряет [data-header-nav], который на мобильном
+            display:none, из-за чего пилюля никогда не раскрывалась.
+            placement="up" — панель уходит вверх, внизу экрана ей места нет */}
+        <div data-menu-item className="mt-8 flex justify-center">
+          <LanguageSwitcher
+            locale={locale}
+            dict={dict}
+            variant="pill"
+            placement="up"
+          />
+        </div>
         </div>
       </div>
     </header>

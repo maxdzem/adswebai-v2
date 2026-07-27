@@ -9,6 +9,16 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function SmoothScroll({ children }: { children: ReactNode }) {
   useEffect(() => {
+    // Адресная строка мобильного браузера при скролле то появляется, то
+    // прячется, меняет высоту вьюпорта и шлёт resize. ScrollTrigger по
+    // умолчанию делает на каждый такой resize refresh() — пересчёт пинов
+    // прямо посреди прокрутки, отсюда рывки на телефоне. Высоты секций
+    // переведены в svh и от адресной строки не зависят, так что
+    // пересчитывать нечего.
+    // Стоит ДО выхода по reduced-motion: Lenis там не создаётся,
+    // но ScrollTrigger всё равно работает.
+    ScrollTrigger.config({ ignoreMobileResize: true });
+
     // Пользователь просил меньше движения — оставляем нативную прокрутку
     // и глушим scrub-анимации: их считает ScrollTrigger, а не мы
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {

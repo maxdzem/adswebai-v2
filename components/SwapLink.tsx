@@ -65,11 +65,17 @@ export default function SwapLink({
       tlRef.current = tl;
     }, root);
 
+    // Только при настоящем курсоре — см. комментарий в Button.tsx:
+    // на тапе слово уезжало вправо и залипало в сдвинутом состоянии
     const target = root.closest<HTMLElement>("[data-btn-hover]") ?? root;
+    const hover = window.matchMedia("(hover: hover)");
     const enter = () => tlRef.current?.play();
     const leave = () => tlRef.current?.reverse();
-    target.addEventListener("mouseenter", enter);
-    target.addEventListener("mouseleave", leave);
+
+    if (hover.matches) {
+      target.addEventListener("mouseenter", enter);
+      target.addEventListener("mouseleave", leave);
+    }
 
     return () => {
       target.removeEventListener("mouseenter", enter);

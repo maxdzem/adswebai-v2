@@ -115,7 +115,7 @@ export default function ServicesGrid({
             <div className="relative">
               <span
                 aria-hidden
-                className="pointer-events-none absolute -top-[0.55em] right-1 z-10 text-[clamp(5.4rem,7.8vw,8.4rem)] font-black leading-none text-white/90"
+                className="pointer-events-none absolute -top-[0.45em] right-1 z-10 text-[clamp(3.4rem,7.8vw,8.4rem)] font-black leading-none text-white/90"
               >
                 {s.n}
               </span>

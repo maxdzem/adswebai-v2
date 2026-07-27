@@ -145,7 +145,15 @@ export default function ArticlesList({
     });
   };
 
+  /** Есть ли настоящий курсор. На тач-экранах браузер синтезирует
+   *  mouseover/mousemove при тапе, и картинка-follower зависала посреди
+   *  экрана: mouseleave не приходил, пока не тапнешь в другое место. */
+  const hasHover = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(hover: hover)").matches;
+
   const handleEnter = (e: MouseEvent, bg: string) => {
+    if (!hasHover()) return;
     setThumbBg(bg);
     // debounce: отменяем отложенное скрытие — при переходе между строками не мигает
     if (hideTimer.current !== null) {
@@ -157,7 +165,10 @@ export default function ArticlesList({
     gsap.set(followerRef.current, { autoAlpha: 1 });
   };
 
-  const handleMove = (e: MouseEvent) => moveAll(e.clientX, e.clientY);
+  const handleMove = (e: MouseEvent) => {
+    if (!hasHover()) return;
+    moveAll(e.clientX, e.clientY);
+  };
 
   const handleLeave = () => {
     hideTimer.current = window.setTimeout(() => {
@@ -168,11 +179,14 @@ export default function ArticlesList({
   return (
     <section
       ref={sectionRef}
-      // -mt-[21.5cm]: вырезаем пустой хвост секции с кругом — к этому моменту
-      // круг уже схлопнулся в ничто, и там оставался мёртвый экран.
-      // Было 18cm, поднято ещё на 3.5cm — вместе с секцией едет и всё,
-      // что идёт ниже (форма, футер), так как это обычный поток
-      className="-mt-[21.5cm] bg-cream px-6 pb-40 pt-28 text-ink lg:px-10"
+      // Отрицательный отступ вырезает пустой хвост секции с кругом — к
+      // этому моменту круг уже схлопнулся в ничто, и там оставался мёртвый
+      // экран. Вместе с секцией едет и всё, что ниже (форма, футер).
+      // -75svh вместо прежних -21.5cm: сантиметры не зависят от экрана, и
+      // на телефоне те же 813px съедали 76% секции с кругом вместо 47%,
+      // как задумано на десктопе. 75svh даёт −810px на 1080p (разница
+      // 2.6px) и ту же пропорцию на любой высоте вьюпорта
+      className="-mt-[75svh] bg-cream px-6 pb-40 pt-28 text-ink lg:px-10"
     >
       <h2 data-list-heading className="type-display fs-display-m">
         {dict.articles.heading}

@@ -110,7 +110,7 @@ export default function AiIntro({
       {/* Our Agents / adswebai.flow */}
       <div
         data-ai-block
-        className="mt-56 grid grid-cols-1 gap-10 lg:grid-cols-12"
+        className="mt-24 grid grid-cols-1 gap-10 lg:mt-56 lg:grid-cols-12"
       >
         <div className="lg:col-span-3">
           <p className="fs-label font-medium">{dict.ai.ourAgents}</p>
@@ -134,7 +134,10 @@ export default function AiIntro({
           сетка частиц, разбегающаяся от курсора */}
       <div
         data-flow-banner
-        className="relative mx-auto mt-28 h-[65vh] w-full max-w-[72%] overflow-hidden"
+        // max-w-[72%] — десктопная рамка кадра. На 375px она давала
+        // баннер шириной 235px: узкая оранжевая полоска в полэкрана
+        // высотой. На мобильном баннер во всю ширину и с пропорцией 4:5
+        className="relative mx-auto mt-16 aspect-[4/5] w-full overflow-hidden sm:aspect-[16/10] lg:mt-28 lg:aspect-auto lg:h-[65vh] lg:max-w-[72%]"
         style={{
           background:
             "radial-gradient(120% 140% at 20% 0%, #f8bd7e 0%, #f2a45c 45%, #e88d33 100%)",

@@ -97,10 +97,14 @@ export default function LanguageSwitcher({
   locale,
   dict,
   variant = "dot",
+  placement = "down",
 }: {
   locale: Locale;
   dict: Dict;
   variant?: "dot" | "pill";
+  /** Куда раскрывается панель. В мобильном оверлее пилюля стоит внизу
+   *  экрана — панель обязана идти вверх, иначе она уезжает за край. */
+  placement?: "down" | "up";
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -121,7 +125,7 @@ export default function LanguageSwitcher({
     const ctx = gsap.context(() => {
       gsap.set(panelRef.current, {
         autoAlpha: 0,
-        y: -12,
+        y: placement === "up" ? 12 : -12,
         scale: 0.97,
       });
       gsap.set("[data-lang-item]", { autoAlpha: 0, y: 8 });
@@ -140,7 +144,7 @@ export default function LanguageSwitcher({
     }, rootRef);
 
     return () => ctx.revert();
-  }, [variant]);
+  }, [variant, placement]);
 
   // Раскрытие: точка растягивается в пилюлю с языком и шевроном
   // (как на референсе), следом выезжает панель, строки — каскадом
@@ -304,7 +308,7 @@ export default function LanguageSwitcher({
         });
         gsap.to(panelRef.current, {
           autoAlpha: 0,
-          y: -10,
+          y: placement === "up" ? 10 : -10,
           scale: 0.98,
           duration: 0.38,
           delay: 0.1,
@@ -315,13 +319,15 @@ export default function LanguageSwitcher({
     }, rootRef);
 
     return () => ctx.revert();
-  }, [open, variant]);
+  }, [open, variant, placement]);
 
   // Закрытие по клику снаружи и Escape
   useEffect(() => {
     if (!open) return;
 
-    const onDown = (e: MouseEvent) => {
+    // touchstart рядом с mousedown: на тач-экранах синтетический mouse-
+    // событие приходит с задержкой, панель успевала «залипнуть»
+    const onDown = (e: MouseEvent | TouchEvent) => {
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
@@ -329,9 +335,11 @@ export default function LanguageSwitcher({
     };
 
     document.addEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
@@ -349,10 +357,14 @@ export default function LanguageSwitcher({
   if (variant === "pill") {
     return (
       <div ref={rootRef} className="relative">
-        {/* Панель раскрывается вверх — футер стоит внизу страницы */}
+        {/* Направление раскрытия задаётся placement: в футере панель
+            уходит вниз, в мобильном оверлее — вверх, там до низа экрана
+            остаётся меньше её высоты */}
         <div
           ref={panelRef}
-          className={`${panelClass} right-0 top-[calc(100%+14px)]`}
+          className={`${panelClass} right-0 ${
+            placement === "up" ? "bottom-[calc(100%+14px)]" : "top-[calc(100%+14px)]"
+          }`}
         >
           <Panel locale={locale} onPick={pick} />
         </div>
@@ -363,11 +375,14 @@ export default function LanguageSwitcher({
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-label={dict.lang.change}
-          className="flex items-center gap-2"
+          className="flex max-w-full items-center gap-2"
         >
-          {/* Две подписи стопкой — при раскрытии они перелистываются */}
+          {/* Две подписи стопкой — при раскрытии они перелистываются.
+              min-w-0 + max-w-full: PILL_W здесь не жёсткая ширина,
+              а максимум — на экранах уже 375px пилюля ужимается,
+              вместо того чтобы вылезать за поля */}
           <span
-            className="relative grid h-12 items-center overflow-hidden rounded-full bg-white/10 px-6 text-left transition-colors duration-300 hover:bg-white/15"
+            className="relative grid h-12 min-w-0 items-center overflow-hidden rounded-full bg-white/10 px-6 text-left transition-colors duration-300 hover:bg-white/15"
             style={{ width: PILL_W }}
           >
             <span

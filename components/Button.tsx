@@ -68,11 +68,18 @@ export default function Button({
       tlRef.current = tl;
     }, root);
 
+    // Только там, где есть настоящий курсор. На тач-экране браузер шлёт
+    // синтетический mouseenter при тапе, лейбл уезжал вправо и оставался
+    // так до тапа по другому элементу — mouseleave не приходит.
     const target = root.closest<HTMLElement>("[data-btn-hover]") ?? root;
+    const hover = window.matchMedia("(hover: hover)");
     const enter = () => tlRef.current?.play();
     const leave = () => tlRef.current?.reverse();
-    target.addEventListener("mouseenter", enter);
-    target.addEventListener("mouseleave", leave);
+
+    if (hover.matches) {
+      target.addEventListener("mouseenter", enter);
+      target.addEventListener("mouseleave", leave);
+    }
 
     return () => {
       target.removeEventListener("mouseenter", enter);
@@ -85,7 +92,9 @@ export default function Button({
     rootRef.current = el;
   };
 
-  const baseClass = `relative inline-flex h-[40px] shrink-0 items-center ${className}`;
+  // after:-inset-y-[5px] — невидимое расширение зоны нажатия до 50px:
+  // сама пилюля 40px, для пальца это мало (минимум 44px)
+  const baseClass = `relative inline-flex h-[40px] shrink-0 items-center after:absolute after:-inset-y-[5px] after:inset-x-0 after:content-[''] ${className}`;
   const surface = `${colorClass} transition-colors duration-300`;
 
   const inner = (

@@ -227,27 +227,29 @@ export default function Contact({ dict }: { dict: Dict }) {
       // pb-[2cm]: светлая зона под формой. Раньше здесь было pb-44 (≈4.6см),
       // футер подняли до нуля, теперь 2 см возвращены светлому фону —
       // ровно на столько же опускается граница с тёмным футером
-      className="bg-cream px-6 pb-[2cm] pt-36 lg:px-10"
+      className="bg-cream px-6 pb-[2cm] pt-20 lg:px-10 lg:pt-36"
     >
       <div className="grid grid-cols-1 gap-20 lg:grid-cols-2">
         <h2
           data-contact-el
-          className="type-display fs-display-m max-w-[14ch]"
+          className="type-display fs-display-m lg:max-w-[14ch]"
         >
           {dict.contact.heading}
         </h2>
 
         <div className="relative">
           {/* Аватар + фиолетовый пузырь */}
-          <div data-contact-el className="flex items-start gap-8">
+          {/* На мобильном аватар встаёт над пузырём: в строке пузырю
+              оставалось 199px, и текст ломался на 12 строк */}
+          <div data-contact-el className="flex flex-col items-start gap-6 sm:flex-row sm:gap-8">
             {/* Розовый круг-аватар (цвет круга с лендинга), 3D-вход при скролле */}
             <div
               data-contact-avatar
-              className="grid h-24 w-24 shrink-0 place-items-center rounded-full bg-blush shadow-lg"
+              className="grid h-20 w-20 shrink-0 place-items-center rounded-full bg-blush shadow-lg sm:h-24 sm:w-24"
             >
               <span className="fs-label font-bold text-ink">.adswebai</span>
             </div>
-            <div data-contact-bubble className="relative mt-10">
+            <div data-contact-bubble className="relative w-full sm:mt-10">
               <div className="fs-body-m max-w-md rounded-2xl bg-grape p-5 leading-relaxed text-white">
                 {dict.contact.greeting}
                 <br />
@@ -255,18 +257,18 @@ export default function Contact({ dict }: { dict: Dict }) {
                   ? dict.contact.thanks
                   : dict.contact.intro}
               </div>
-              <span className="absolute -bottom-4 -left-6 h-3.5 w-3.5 rounded-full bg-grape" />
+              <span className="absolute -bottom-4 -left-3 h-3.5 w-3.5 rounded-full bg-grape sm:-left-6" />
             </div>
           </div>
 
-          <form data-contact-el onSubmit={onSubmit} className="mt-16 lg:pl-32">
+          <form data-contact-el onSubmit={onSubmit} className="mt-10 lg:mt-16 lg:pl-32">
             {/* Карточка шага */}
             {/* Клик в любом месте карточки ставит курсор в поле — не нужно
                 целиться ровно в строку ввода. cursor-text подсказывает это */}
             <div
               ref={cardRef}
               onClick={() => inputRef.current?.focus({ preventScroll: true })}
-              className="w-full max-w-xl cursor-text overflow-hidden rounded-[32px] border border-ink/80 bg-white px-8 py-7 shadow-[0_18px_40px_-24px_rgba(45,45,45,0.45)]"
+              className="w-full max-w-xl cursor-text overflow-hidden rounded-[32px] border border-ink/80 bg-white px-5 py-6 sm:px-8 sm:py-7 shadow-[0_18px_40px_-24px_rgba(45,45,45,0.45)]"
             >
               <div ref={fieldRef}>
                 {sent ? (
@@ -284,7 +286,9 @@ export default function Contact({ dict }: { dict: Dict }) {
                         return (
                           <label
                             key={opt}
-                            className="group flex cursor-pointer items-center gap-4"
+                            // py-2: строка выходит 44px в высоту — минимум
+                            // для пальца, раньше было ~26px
+                            className="group flex cursor-pointer items-center gap-4 py-2"
                           >
                             <input
                               type="radio"

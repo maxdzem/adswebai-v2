@@ -91,7 +91,11 @@ export default function AnimatedCircle({ dict }: { dict: Dict }) {
           а розовый круг (sticky = позиционированный) по-прежнему сверху —
           ложится на список аркой, как в оригинале.
           Высота 160vh: лишний ход скролла вырезан, пустых экранов нет */}
-      <section ref={wrapperRef} className="h-[160vh] bg-cream">
+      {/* svh вместо vh: vh в мобильных браузерах равен БОЛЬШОМУ вьюпорту
+          (адресная строка спрятана), поэтому низ липкого блока уезжал под
+          хром браузера. svh — маленький вьюпорт, он одинаков в обоих
+          состояниях. На десктопе svh == vh, пропорция 160:100 сохранена */}
+      <section ref={wrapperRef} className="h-[160svh] bg-cream">
         {/* overflow-hidden на самом sticky-элементе безопасен и запирает круг
             внутри секции. Углов нет: диагональ вьюпорта (≈1.41vmax) меньше
             диаметра круга (1.5vmax) — при scale:1 экран накрыт целиком */}
@@ -101,7 +105,7 @@ export default function AnimatedCircle({ dict }: { dict: Dict }) {
             и, разрастаясь, накрывает заголовок, а затем и весь экран.
             pointer-events-none: прозрачный слой не перехватывает ховеры
             у списка статей, который подтянут под секцию. */}
-        <div className="pointer-events-none sticky top-0 h-screen">
+        <div className="pointer-events-none sticky top-0 h-svh">
           {/* Круг свёрстан в полном размере (резкие края), появляется из
               scale:0 — класс scale-0 держит его невидимым до гидрации */}
           {/* Точка рождения/схлопывания — 24% от верха экрана, сразу под
@@ -109,26 +113,86 @@ export default function AnimatedCircle({ dict }: { dict: Dict }) {
               маленький круг был не виден и казалось, что там пустота.
               На полное покрытие не влияет: 150vmax перекрывает экран
               с любым центром */}
+          {/* На телефоне центр опущен до 44%: при top-[24%] радиус
+              150vmax (на портретном экране vmax = высота) не дотягивался
+              до нижних углов и в них оставались кремовые клинья */}
           <div
             ref={circleRef}
-            className="absolute left-1/2 top-[24%] aspect-square w-[150vmax] -translate-x-1/2 -translate-y-1/2 scale-0 rounded-full bg-blush"
+            className="absolute left-1/2 top-[44%] aspect-square w-[150vmax] -translate-x-1/2 -translate-y-1/2 scale-0 rounded-full bg-blush lg:top-[24%]"
           />
 
           {/* Контент поверх круга — не масштабируется вместе с ним */}
           <div ref={contentRef} className="absolute inset-0 opacity-0">
-            <div className="type-display absolute inset-0 flex select-none items-center justify-center whitespace-nowrap text-[16vw] text-ink">
-              <span className="ghost-letters" aria-hidden>
+            {/* На мобильном — колонка: «ads», круг с видео, «ai». Кружок
+                стоит обычным потоком МЕЖДУ строками, поэтому его позиция
+                считается флексом, а не подгоняется руками под каждый экран.
+                Гост-буквы и дырка 34vw только с lg: в строку они не влезают
+                (≈554px содержимого при 390px экрана — надпись обрезалась
+                с обеих сторон, её спасал только overflow-x: clip) */}
+            <div className="type-display absolute inset-0 flex select-none flex-col items-center justify-start gap-[2vw] whitespace-nowrap pt-[7svh] text-[20vw] text-ink lg:flex-row lg:items-center lg:justify-center lg:gap-0 lg:pt-0 lg:text-[16vw]">
+              <span className="ghost-letters hidden lg:inline" aria-hidden>
                 web
               </span>
-              <span className="ml-[1.5vw]">ads</span>
-              <span className="w-[34vw] shrink-0" aria-hidden />
+              <span className="lg:ml-[1.5vw]">ads</span>
+
+              {/* Обёртка позиционирования — GSAP её НЕ трогает.
+                  Масштабируется только вложенный videoCircleRef, поэтому
+                  кнопка play остаётся постоянного размера. С lg обёртка
+                  уходит в absolute по центру экрана, а её место в строке
+                  занимает спейсер 34vw ниже */}
+              <div className="relative aspect-square w-[64vw] max-w-[34svh] shrink-0 lg:absolute lg:left-1/2 lg:top-1/2 lg:w-[32vw] lg:max-w-[66vh] lg:-translate-x-1/2 lg:-translate-y-1/2">
+                <div
+                  ref={videoCircleRef}
+                  className="absolute inset-0 overflow-hidden rounded-full"
+                >
+                  <LazyVideo
+                    ref={videoRef}
+                    src="/face-video.mp4"
+                    className="h-full w-full object-cover"
+                    onPlayingChange={setPlaying}
+                  />
+                </div>
+
+                {/* Сестра масштабируемого круга, а не его потомок: раньше
+                    кнопка ехала вместе со scale 0.32→1 и в начале прохода
+                    была ~22px. pointer-events-auto — родительский
+                    липкий слой гасит клики */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const v = videoRef.current;
+                    if (!v) return;
+                    if (v.paused) v.play().catch(() => {});
+                    else v.pause();
+                  }}
+                  aria-label={playing ? dict.circle.pause : dict.circle.play}
+                  className="pointer-events-auto absolute left-1/2 top-1/2 grid h-[56px] w-[56px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-transform duration-300 hover:scale-105 lg:h-[70px] lg:w-[70px]"
+                >
+                  {playing ? (
+                    <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor" aria-hidden>
+                      <rect x="1" y="1.5" width="4" height="13" />
+                      <rect x="9" y="1.5" width="4" height="13" />
+                    </svg>
+                  ) : (
+                    <svg width="14" height="16" viewBox="0 0 14 16" fill="none" aria-hidden>
+                      <path d="M1 1.5v13L13 8 1 1.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+
+              {/* Дырка под круг — только с lg, где круг ушёл в absolute */}
+              <span className="hidden shrink-0 lg:block lg:w-[34vw]" aria-hidden />
+
               <span>ai</span>
-              <span className="ghost-letters ml-[1.5vw]" aria-hidden>
+              <span className="ghost-letters hidden lg:ml-[1.5vw] lg:inline" aria-hidden>
                 ads
               </span>
             </div>
 
-            <div className="absolute left-[8vw] top-[63%] lg:left-[14vw]">
+            {/* На мобильном блок центрирован под колонкой, на десктопе —
+                прежняя левая полка */}
+            <div className="absolute left-1/2 top-[74%] -translate-x-1/2 text-center lg:left-[14vw] lg:top-[63%] lg:translate-x-0 lg:text-left">
               <span className="fs-label inline-block rounded-[50%] border border-ink/70 px-5 py-2 font-medium">
                 {dict.circle.meet}
               </span>
@@ -136,43 +200,6 @@ export default function AnimatedCircle({ dict }: { dict: Dict }) {
               <p className="fs-body-m text-ink/50">{dict.circle.agents}</p>
             </div>
 
-            {/* video-mask из аудита: круг с overflow-hidden, масштабируется
-                отдельно от розового полотна; play-кнопка 70×70 по центру */}
-            <div
-              ref={videoCircleRef}
-              className="absolute left-1/2 top-1/2 aspect-square w-[32vw] max-w-[66vh] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full"
-            >
-              <LazyVideo
-                ref={videoRef}
-                src="/face-video.mp4"
-                className="h-full w-full object-cover"
-                onPlayingChange={setPlaying}
-              />
-              {/* pointer-events-auto: родительский sticky-слой отключает
-                  клики, иначе по кнопке было не попасть */}
-              <button
-                type="button"
-                onClick={() => {
-                  const v = videoRef.current;
-                  if (!v) return;
-                  if (v.paused) v.play().catch(() => {});
-                  else v.pause();
-                }}
-                aria-label={playing ? dict.circle.pause : dict.circle.play}
-                className="pointer-events-auto absolute left-1/2 top-1/2 grid h-[70px] w-[70px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-transform duration-300 hover:scale-105"
-              >
-                {playing ? (
-                  <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor" aria-hidden>
-                    <rect x="1" y="1.5" width="4" height="13" />
-                    <rect x="9" y="1.5" width="4" height="13" />
-                  </svg>
-                ) : (
-                  <svg width="14" height="16" viewBox="0 0 14 16" fill="none" aria-hidden>
-                    <path d="M1 1.5v13L13 8 1 1.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </button>
-            </div>
           </div>
         </div>
       </section>
