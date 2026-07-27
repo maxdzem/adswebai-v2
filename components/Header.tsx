@@ -168,7 +168,7 @@ export default function Header({
   useGSAP(
     () => {
       // Intro: контейнер 0.3s, пункты всплывают y:+30 за 0.5s, stagger 0.05
-      gsap
+      const intro = gsap
         .timeline()
         .from(barRef.current, { autoAlpha: 0, duration: 0.3 })
         .from(
@@ -183,6 +183,26 @@ export default function Header({
           },
           "+=0.1"
         );
+
+      // Страховка. gsap.from ставит стартовое состояние (autoAlpha: 0)
+      // СРАЗУ при создании твина, а видимость возвращает только доиграв.
+      // Значит любая заминка — ошибка в соседнем эффекте, прерванный
+      // тикер, «отравленный» Fast Refresh — оставляет шапку пустой
+      // навсегда: логотип успел проявиться, остальное так и висит
+      // на нуле прозрачности. Через 3с принудительно снимаем инлайновые
+      // стили, если таймлайн почему-то не дошёл до конца. Нормальный
+      // прогон укладывается в ~1.2с, так что в штатном случае страховка
+      // просто не срабатывает.
+      // querySelectorAll по ref, а не строковый селектор: скоуп useGSAP
+      // действует только на вызовы внутри тела колбэка, а этот код
+      // выполнится позже, уже вне его — строка искала бы по всему документу.
+      const safety = window.setTimeout(() => {
+        if (intro.progress() < 1) {
+          const items = ref.current?.querySelectorAll("[data-nav-item]");
+          if (items?.length) gsap.set(items, { clearProps: "all" });
+          gsap.set(barRef.current, { clearProps: "opacity,visibility" });
+        }
+      }, 3000);
 
       // Smart header: скрытие при скролле вниз, выезд при скролле вверх —
       // твин 0.5s power2.out (как sticky-твин референса)
@@ -260,6 +280,8 @@ export default function Header({
           else showAnim.reverse();
         },
       });
+
+      return () => window.clearTimeout(safety);
     },
     { scope: ref }
   );
