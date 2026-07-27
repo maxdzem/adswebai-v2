@@ -152,15 +152,16 @@ export default function LanguageSwitcher({
     const ctx = gsap.context(() => {
       if (open) {
         if (variant === "dot") {
-          // Значок разворачивается на 180° вокруг горизонтальной оси —
-          // розовая грань (закрыто) уходит назад, тёмная грань со
-          // стрелкой (открыто) встаёт на её место лицом к зрителю.
-          // Раньше здесь круг растягивался в пилюлю с текстом — заменено
-          // на flip, ближе к референсу с 3D-кубом
+          // Куб довёртывается на 90° вокруг X — грань bottom
+          // (transform: rotateX(-90deg) ...) при таком повороте родителя
+          // получает суммарные -90+90=0° и встаёт лицом к зрителю на
+          // месте front. Дуга cubic-bezier(0,0,0.2,1) из референса —
+          // это ease-out по кубической кривой, ближайший встроенный
+          // аналог в GSAP: power2.out
           gsap.to(cubeRef.current, {
-            rotationX: 180,
-            duration: 0.5,
-            ease: "power3.inOut",
+            rotationX: 90,
+            duration: 0.4,
+            ease: "power2.out",
             overwrite: "auto",
           });
         }
@@ -207,8 +208,7 @@ export default function LanguageSwitcher({
         // Закрытие мягче открытия: элементы уходят по очереди, все
         // изинги — inOut, поэтому движение не обрывается, а затухает
         if (variant === "dot") {
-          // Флип обратно — чуть быстрее открытия, симметрично закрытию
-          // мобильного меню и других оверлеев в проекте
+          // Куб возвращается в исходное положение — front снова лицом
           gsap.to(cubeRef.current, {
             rotationX: 0,
             duration: 0.4,
@@ -367,13 +367,16 @@ export default function LanguageSwitcher({
   // dot — шапка, сразу после логотипа
   return (
     <div ref={rootRef} className="relative flex items-center">
-      {/* Фирменный значок: розовый квадрат со вписанным кругом — тот же
-          мотив, что у аватара в контактной форме и в фавиконе. Триггер
-          не растёт в пилюлю, а разворачивается на 180° вокруг
-          горизонтальной оси, как кубик: closed — розовая грань с белым
-          кругом и символом языка; open — тёмная грань с розовым кругом
-          и шевроном. perspective — на неподвижной обёртке (иначе объём
-          не читается), сам flip — на кнопке через transform-style */}
+      {/* Фирменный значок: розовый квадрат С ОСТРЫМИ УГЛАМИ, символ языка —
+          белым по нему напрямую, без круга-подложки. Настоящий 4-гранный
+          куб, как в референсе: perspective на неподвижной обёртке, сама
+          кнопка — preserve-3d плюс постоянный сдвиг translateZ(-half),
+          благодаря которому ось вращения проходит через центр куба, а не
+          через переднюю грань. Грани разложены по X на ±90°/180°:
+          front — закрыто (символ языка), bottom — открыто (шеврон);
+          top/back держат те же цвета соседних граней про запас, они не
+          участвуют в единственном используемом повороте 0↔90°, но делают
+          коробку настоящей, а не бутафорской с одной стороной */}
       <div
         className="relative z-10 h-11 w-11 shrink-0"
         style={{ perspective: 600 }}
@@ -384,26 +387,37 @@ export default function LanguageSwitcher({
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? dict.lang.close : dict.lang.change}
           aria-expanded={open}
-          className="relative block h-11 w-11 outline-none [transform-style:preserve-3d]"
+          className="relative block h-11 w-11 outline-none [transform-style:preserve-3d] focus-visible:ring-2 focus-visible:ring-cream/60"
+          style={{ transform: "translateZ(-22px)" }}
         >
-          {/* Закрытая грань: без собственного поворота — лежит в той же
-              плоскости, что и кнопка, поэтому видна первой */}
-          <span className="absolute inset-0 grid place-items-center rounded-[14px] bg-blush [backface-visibility:hidden]">
-            <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-ink">
-              <GlobeIcon size={14} />
-            </span>
+          {/* front — закрыто: символ языка белым по розовому, без круга */}
+          <span
+            className="absolute inset-0 grid place-items-center bg-blush text-white [backface-visibility:hidden]"
+            style={{ transform: "translateZ(22px)" }}
+          >
+            <GlobeIcon size={22} />
           </span>
 
-          {/* Открытая грань: развёрнута на 180° заранее — когда кнопка
-              довернётся до конца, суммарный поворот даст 360°, и грань
-              встанет прямо, а не вверх ногами */}
+          {/* top — не задействована при единственном перелистывании,
+              цвет как у front, чтобы куб не «просвечивал» пустотой */}
           <span
-            className="absolute inset-0 grid place-items-center rounded-[14px] bg-[#2d2d2d] [backface-visibility:hidden]"
-            style={{ transform: "rotateX(180deg)" }}
+            className="absolute inset-0 bg-blush [backface-visibility:hidden]"
+            style={{ transform: "rotateX(90deg) translateZ(22px)" }}
+          />
+
+          {/* back — аналогично top, но со стороны открытой грани */}
+          <span
+            className="absolute inset-0 bg-[#2d2d2d] [backface-visibility:hidden]"
+            style={{ transform: "rotateX(180deg) translateZ(22px)" }}
+          />
+
+          {/* bottom — открыто: доворот на 90° приводит именно её лицом
+              к зрителю (см. комментарий у анимации открытия) */}
+          <span
+            className="absolute inset-0 grid place-items-center bg-[#2d2d2d] text-white [backface-visibility:hidden]"
+            style={{ transform: "rotateX(-90deg) translateZ(22px)" }}
           >
-            <span className="grid h-6 w-6 place-items-center rounded-full bg-blush text-ink">
-              <Chevron />
-            </span>
+            <Chevron />
           </span>
         </button>
       </div>
