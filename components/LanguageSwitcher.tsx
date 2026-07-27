@@ -397,37 +397,38 @@ export default function LanguageSwitcher({
     setPreviewIndex(localeIndex);
   };
 
-  // Первый рендер: сразу показать грань текущего языка страницы
-  // (например, открыли /ru — сразу чёрная), без анимации. Все следующие
-  // смены previewIndex (колесо, сброс на mouseleave) — уже видимый
-  // кроссфейд.
+  // Цвет больше не привязан к тому, EN это или RU — розовый и на /en,
+  // и на /ru. Чёрный включается ТОЛЬКО как предпросмотр: пока то, что
+  // выбрано колёсиком, ещё не подтверждено кликом и не совпадает
+  // с реальным языком страницы (hasPendingChange). Отпустили мышь без
+  // клика — возвращается розовый.
   const cubeMounted = useRef(false);
   useEffect(() => {
     if (variant !== "dot" || !enFaceRef.current || !ruFaceRef.current) return;
 
-    const enOpacity = previewIndex === 0 ? 1 : 0;
-    const ruOpacity = previewIndex === 1 ? 1 : 0;
+    const pinkOpacity = hasPendingChange ? 0 : 1;
+    const blackOpacity = hasPendingChange ? 1 : 0;
 
     if (!cubeMounted.current) {
-      gsap.set(enFaceRef.current, { opacity: enOpacity });
-      gsap.set(ruFaceRef.current, { opacity: ruOpacity });
+      gsap.set(enFaceRef.current, { opacity: pinkOpacity });
+      gsap.set(ruFaceRef.current, { opacity: blackOpacity });
       cubeMounted.current = true;
       return;
     }
 
     gsap.to(enFaceRef.current, {
-      opacity: enOpacity,
+      opacity: pinkOpacity,
       duration: 0.35,
       ease: "power2.out",
       overwrite: "auto",
     });
     gsap.to(ruFaceRef.current, {
-      opacity: ruOpacity,
+      opacity: blackOpacity,
       duration: 0.35,
       ease: "power2.out",
       overwrite: "auto",
     });
-  }, [previewIndex, variant]);
+  }, [hasPendingChange, variant]);
 
   // Пульсирующее кольцо-подсказка: пока выбор не подтверждён кликом
   useEffect(() => {
@@ -614,23 +615,18 @@ export default function LanguageSwitcher({
                 rotationY. Отсюда «квадрат всегда чёрный». Оба языка
                 теперь лежат в одной плоскости друг на друге, и виден
                 тот, у кого opacity: 1 — никакой 3D-неоднозначности */}
-            {/* Стартовая видимость — от localeIndex, а не всегда «EN
-                видим»: иначе на /ru до гидратации сервер рисовал бы
-                розовую грань, и JS уже ПОСЛЕ paint резко подменял её
-                на чёрную — короткая вспышка не того цвета */}
+            {/* Розовая видна всегда в покое — на /en и на /ru одинаково,
+                цвет больше не привязан к языку. Чёрная включается только
+                на время предпросмотра (см. useEffect по hasPendingChange) */}
             <span
               ref={enFaceRef}
-              className={`absolute inset-0 grid place-items-center bg-[#FF0091] text-white ${
-                localeIndex === 0 ? "" : "opacity-0"
-              }`}
+              className="absolute inset-0 grid place-items-center bg-[#FF0091] text-white"
             >
               <GlobeIcon size={22} />
             </span>
             <span
               ref={ruFaceRef}
-              className={`absolute inset-0 grid place-items-center bg-black text-white ${
-                localeIndex === 0 ? "opacity-0" : ""
-              }`}
+              className="absolute inset-0 grid place-items-center bg-black text-white opacity-0"
             >
               <GlobeIcon size={22} />
             </span>
