@@ -593,18 +593,18 @@ export default function LanguageSwitcher({
             <GlobeIcon size={22} />
           </span>
 
-          {/* top — не задействована при единственном перелистывании,
-              цвет как у front, чтобы куб не «просвечивал» пустотой */}
+          {/* top — верх коробки, чтобы при довороте по X не зияла пустота */}
           <span
             className="absolute inset-0 bg-blush [backface-visibility:hidden]"
             style={{ transform: "rotateX(90deg) translateZ(18px)" }}
           />
 
-          {/* back — аналогично top, но со стороны открытой грани */}
-          <span
-            className="absolute inset-0 bg-[#2d2d2d] [backface-visibility:hidden]"
-            style={{ transform: "rotateX(180deg) translateZ(18px)" }}
-          />
+          {/* Грани «back» здесь СПЕЦИАЛЬНО нет. rotateX(180deg) translateZ(18px)
+              и rotateY(180deg) translateZ(18px) — это одна и та же плоскость
+              z = -18: пустая тёмная back лежала ровно на языковой грани выше
+              и, идя позже в DOM, перекрывала её. Из-за этого на /ru значок
+              был тёмным квадратом без иконки вместо фиолетового с глобусом.
+              Заднюю сторону закрывает языковая грань, дырки не видно. */}
 
           {/* bottom — открыто: доворот на 90° приводит именно её лицом
               к зрителю (см. комментарий у анимации открытия). Крупный
