@@ -516,44 +516,54 @@ export default function Header({
               }
             />
           </Link>
-
-          {/* Бургер — только на мобильных. По референсу: три линии 34px,
-              hit-area 48×48, переход .3s cubic-bezier(.455,.03,.515,.955).
-              В открытом состоянии складывается в крестик.
-              При открытом меню полоски всегда кремовые: bg-current брал
-              цвет шапки, и на внутренних страницах крестик выходил
-              #2d2d2d на фоне оверлея #191715 — его было не разглядеть. */}
-          <button
-            type="button"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label={menuOpen ? dict.nav.menuClose : dict.nav.menuOpen}
-            aria-expanded={menuOpen}
-            data-nav-item
-            className={`relative z-50 h-[20px] w-[40px] shrink-0 transition-colors duration-300 after:absolute after:-inset-x-[4px] after:-inset-y-[14px] after:content-[''] lg:hidden ${
-              menuOpen ? "text-cream" : ""
-            }`}
-          >
-            {[0, 1, 2].map((i) => (
-              <span
-                key={i}
-                aria-hidden
-                className={`absolute left-1/2 h-[1.5px] w-[34px] -translate-x-1/2 bg-current transition-transform duration-300 ease-[cubic-bezier(0.455,0.03,0.515,0.955)] ${
-                  i === 0 ? "top-0" : i === 1 ? "top-1/2 -translate-y-1/2" : "bottom-0"
-                } ${
-                  menuOpen
-                    ? i === 0
-                      ? "translate-y-[9px] rotate-45"
-                      : i === 1
-                        ? "scale-x-0"
-                        : "-translate-y-[9px] -rotate-45"
-                    : ""
-                }`}
-              />
-            ))}
-          </button>
           </div>
         </div>
       </div>
+
+      {/* Бургер — прямой потомок <header>, НЕ часть barRef. barRef получает
+          transform от GSAP (прячет бар при скролле), а transform создаёт
+          собственный контекст наложения: z-50 бургера тогда сравнивался бы
+          не с z-40 оверлея на уровне <header>, а только с соседями внутри
+          barRef — и оверлей рисовался поверх кнопки. Крестика не было видно
+          именно поэтому. absolute вместо места в flex-строке: правый край
+          и вертикальный центр 100px-бара совпадают с прежней позицией,
+          а header (position: fixed, без transform) — её containing block.
+          Из-за этого бургер больше не прячется вместе с шапкой при скролле
+          вниз — это осознанный компромисс: кнопка открытия/закрытия меню
+          должна быть доступна всегда.
+          Три линии 34px, hit-area 48×48, переход .3s cubic-bezier(.455,.03,.515,.955).
+          В открытом состоянии складывается в крестик. Полоски всегда
+          кремовые при открытом меню: bg-current брал цвет шапки, и на
+          внутренних страницах крестик выходил #2d2d2d на фоне оверлея
+          #191715 — его было не разглядеть. */}
+      <button
+        type="button"
+        onClick={() => setMenuOpen((v) => !v)}
+        aria-label={menuOpen ? dict.nav.menuClose : dict.nav.menuOpen}
+        aria-expanded={menuOpen}
+        data-nav-item
+        className={`absolute right-6 top-1/2 z-50 h-[20px] w-[40px] -translate-y-1/2 transition-colors duration-300 after:absolute after:-inset-x-[4px] after:-inset-y-[14px] after:content-[''] lg:hidden ${
+          menuOpen ? "text-cream" : ""
+        }`}
+      >
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            aria-hidden
+            className={`absolute left-1/2 h-[1.5px] w-[34px] -translate-x-1/2 bg-current transition-transform duration-300 ease-[cubic-bezier(0.455,0.03,0.515,0.955)] ${
+              i === 0 ? "top-0" : i === 1 ? "top-1/2 -translate-y-1/2" : "bottom-0"
+            } ${
+              menuOpen
+                ? i === 0
+                  ? "translate-y-[9px] rotate-45"
+                  : i === 1
+                    ? "scale-x-0"
+                    : "-translate-y-[9px] -rotate-45"
+                : ""
+            }`}
+          />
+        ))}
+      </button>
 
       {/* Мобильный оверлей: раскрывается эллиптической маской из точки
           у бургера — приём из референса. Радиус лежит в CSS-переменной,
