@@ -401,32 +401,30 @@ export default function Header({
       />
 
       <div className="flex h-[100px] items-center justify-between px-6 lg:px-10">
-        {/* На внутренних страницах логотип розовый (цвет круга с лендинга),
-            но только наверху: при скролле на светлой шапке он снова
-            тёмно-серый, как на лендинге. На главной — цвет темы шапки */}
-        <Link
-          href={href(locale)}
-          data-nav-item
-          data-header-logo
-          aria-label={dict.nav.home}
-          className={`justify-self-start text-[32px] font-black tracking-normal transition-colors duration-300 ${
-            darkHero || scrolled ? "" : "text-blush"
-          }`}
-        >
-          .adswebai
-        </Link>
+        {/* Логотип и переключатель языка — одна группа слева: раньше
+            точка висела по центру всего зазора до меню и на широких
+            экранах уезжала далеко от логотипа. Теперь она — следующий
+            элемент сразу за .adswebai, с ровным фиксированным зазором */}
+        <div className="flex min-w-0 items-center gap-4 lg:gap-6">
+          {/* На внутренних страницах логотип розовый (цвет круга с
+              лендинга), но только наверху: при скролле на светлой шапке
+              он снова тёмно-серый, как на лендинге. На главной — цвет
+              темы шапки */}
+          <Link
+            href={href(locale)}
+            data-nav-item
+            data-header-logo
+            aria-label={dict.nav.home}
+            className={`shrink-0 text-[32px] font-black tracking-normal transition-colors duration-300 ${
+              darkHero || scrolled ? "" : "text-blush"
+            }`}
+          >
+            .adswebai
+          </Link>
 
-        {/* Переключатель — не оверлеем, а полноценным flex-элементом:
-            flex-1 забирает весь свободный зазор между логотипом и меню,
-            justify-center держит точку в его середине. Когда меню шире
-            (или окно уже — открытые девтулзы), зазор сжимается и точка
-            уезжает вместе с ним. Наехать на «Решения» она уже не может:
-            это соседние элементы одной строки, а не наложенные слои. */}
-        <div
-          data-nav-item
-          className="hidden min-w-0 flex-1 justify-center px-4 lg:flex"
-        >
-          <LanguageSwitcher locale={locale} dict={dict} />
+          <div data-nav-item className="hidden lg:flex">
+            <LanguageSwitcher locale={locale} dict={dict} />
+          </div>
         </div>
 
         <div className="flex shrink-0 items-center gap-10">

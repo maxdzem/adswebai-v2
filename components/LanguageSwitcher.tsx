@@ -15,7 +15,7 @@ import type { Dict } from "@/content/dict";
 const PILL_W = 268;
 /** Круг с шевроном (44px) + зазор — их место надо оставить свободным. */
 const CHEV_SPACE = 52;
-/** Запас до логотипа и меню, чтобы пилюля к ним не прижималась. */
+/** Запас до меню справа, чтобы пилюля к нему не прижималась. */
 const SIDE_GAP = 24;
 /** Ниже этой ширины пилюля не раскрывается: незачем — текст всё равно
  *  не поместится, а раскрытие полезло бы на соседние элементы. */
@@ -165,22 +165,18 @@ export default function LanguageSwitcher({
     const ctx = gsap.context(() => {
       if (open) {
         if (variant === "dot") {
-          // Переключатель центрирован оверлеем, поэтому меряем реальный
-          // зазор между логотипом и меню шапки: раскрытая пилюля растёт
-          // симметрично от центра, и наехать она может на любую из сторон.
-          // Берём минимальное из двух полурасстояний — так безопасно
-          // и при открытых девтулзах, и на промежуточных ширинах.
+          // Переключатель стоит сразу после логотипа и растёт вправо —
+          // раньше он был центрирован по всей ширине зазора до меню и
+          // рос симметрично от центра, значит наехать мог на любую
+          // сторону. Теперь левый край неподвижен (рядом с логотипом),
+          // поэтому мерить нужно только запас до меню.
           const header = rootRef.current?.closest("header");
-          const logo = header?.querySelector("[data-header-logo]");
           const nav = header?.querySelector("[data-header-nav]");
-          const centre = (rootRef.current?.getBoundingClientRect().left ?? 0) +
-            (rootRef.current?.offsetWidth ?? 0) / 2;
+          const triggerLeft = rootRef.current?.getBoundingClientRect().left ?? 0;
 
-          const leftEdge = logo?.getBoundingClientRect().right ?? 0;
           const rightEdge =
             nav?.getBoundingClientRect().left ?? window.innerWidth;
-          const halfRoom = Math.min(centre - leftEdge, rightEdge - centre);
-          const room = (halfRoom - SIDE_GAP) * 2 - CHEV_SPACE;
+          const room = rightEdge - triggerLeft - SIDE_GAP - CHEV_SPACE;
 
           const target = Math.max(44, Math.min(PILL_W, room));
 
@@ -436,14 +432,14 @@ export default function LanguageSwitcher({
     );
   }
 
-  // dot — шапка
+  // dot — шапка, сразу после логотипа
   return (
-    <div ref={rootRef} className="relative h-full w-full">
+    <div ref={rootRef} className="relative flex items-center">
       {/* Триггер: свёрнут — круг с глобусом, раскрыт — пилюля с языком
-          и отдельный круг с шевроном (как на референсе). Обёртка
-          центрируется по своей ширине, поэтому при росте пилюли
-          композиция остаётся посередине шапки. */}
-      <div className="absolute left-1/2 top-0 z-10 flex -translate-x-1/2 items-center gap-2">
+          и отдельный круг с шевроном. Стоит в потоке рядом с логотипом
+          (без absolute-центрирования по всей ширине шапки, как раньше) —
+          пилюля растёт вправо, на своём месте, а не «от центра шапки» */}
+      <div className="relative z-10 flex items-center gap-2">
         <button
           ref={pillRef}
           type="button"
@@ -478,10 +474,13 @@ export default function LanguageSwitcher({
         </button>
       </div>
 
-      {/* Панель раскрывается ВНИЗ из-под триггера, по центру шапки */}
+      {/* Панель раскрывается вниз прямо из-под кружка, левым краем
+          вровень с ним — не по центру всей шапки, как было.
+          top: calc(100%+14px), а не хардкод — обёртка больше не h-full
+          на все 100px бара, её высота теперь равна высоте самой кнопки */}
       <div
         ref={panelRef}
-        className={`${panelClass} left-1/2 top-[62px] -translate-x-1/2`}
+        className={`${panelClass} left-0 top-[calc(100%+14px)]`}
       >
         <Panel locale={locale} onPick={pick} />
       </div>
