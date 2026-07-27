@@ -96,11 +96,20 @@ export default async function RootLayout({
   const dict = getDict(lang);
 
   return (
+    // Расширения браузера (Grammarly, ColorZilla, инспекторы на Plasmo)
+    // дописывают свои атрибуты в <html>/<body> и вставляют туда узлы ДО
+    // того, как React начнёт гидрацию. Без флага React считает это
+    // расхождением, роняет гидрацию и пересобирает дерево на клиенте —
+    // а пересборка сносит инлайн-стили, которые GSAP уже успел поставить
+    // шапке. Флаг действует ровно на один уровень (атрибуты и прямой текст
+    // самого элемента), поэтому нужен и на <html>, и на <body>; настоящие
+    // расхождения внутри дерева он не глушит.
     <html
       lang={HTML_LANG[lang]}
       className={`${inter.variable} ${newsreader.variable} antialiased`}
+      suppressHydrationWarning
     >
-      <body className="bg-cream text-ink font-sans">
+      <body className="bg-cream text-ink font-sans" suppressHydrationWarning>
         <SmoothScroll>
           <Header locale={lang} dict={dict} />
           {children}

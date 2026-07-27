@@ -135,10 +135,24 @@ export default function Header({
   const barRef = useRef<HTMLDivElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
   const lineRef = useRef<HTMLDivElement>(null);
-  const tvRef = useRef<gsap.core.Timeline | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuTl = useRef<gsap.core.Timeline | null>(null);
-  const [scrolled, setScrolled] = useState(false);
+  // Единственный источник правды: «кремовое полотно шапки показано».
+  // Им же красится текст, им же — базовая видимость полос и линии, в одном
+  // и том же рендере. Разойтись они физически не могут.
+  //
+  // Это принципиально: полотно и text-cream — ОДИН И ТОТ ЖЕ цвет #eae8e4,
+  // так что любое расхождение делает шапку невидимой. Раньше цвет держал
+  // React, а видимость полотна — GSAP, и стоило анимации не отработать
+  // (упавшая гидрация, прерванный тикер), как шапка оставалась пустой
+  // светлой полосой навсегда.
+  //
+  // barOn — НЕ «scrollY > 100»: он встаёт в true в момент начала включения
+  // полотна и падает в false только когда глитч-выключение доиграло. Эта
+  // асимметрия убирает 0.3с кремового по кремовому на каждом скролле вверх.
+  // SSR всегда false — сервер отдаёт прозрачную шапку с кремовым текстом
+  // поверх тёмного героя, и это валидное читаемое состояние.
+  const [barOn, setBarOn] = useState(false);
   // Тёмный видео-герой есть только на главной. Определяем ПО МАРШРУТУ:
   // шапка живёт в layout и не перемонтируется при клиентских переходах,
   // поэтому разовая проверка DOM при маунте «залипала» на первом значении —
@@ -196,22 +210,19 @@ export default function Header({
       // querySelectorAll по ref, а не строковый селектор: скоуп useGSAP
       // действует только на вызовы внутри тела колбэка, а этот код
       // выполнится позже, уже вне его — строка искала бы по всему документу.
-      const safety = window.setTimeout(() => {
-        if (intro.progress() < 1) {
-          const items = ref.current?.querySelectorAll("[data-nav-item]");
-          if (items?.length) gsap.set(items, { clearProps: "all" });
-          gsap.set(barRef.current, { clearProps: "opacity,visibility" });
-        }
-      }, 3000);
-
       // Smart header: скрытие при скролле вниз, выезд при скролле вверх —
-      // твин 0.5s power2.out (как sticky-твин референса)
+      // твин 0.5s power2.out (как sticky-твин референса).
+      // immediateRender: false — иначе gsap.from увёл бы бар за верх экрана
+      // прямо при создании твина, и вернул бы его только следующий
+      // progress(1). Всё в одном layout-эффекте, мигания не видно, но если
+      // между двумя строчками что-то бросит — бар останется угнанным.
       const showAnim = gsap
         .from(barRef.current, {
           yPercent: -100,
           paused: true,
           duration: 0.5,
           ease: "power2.out",
+          immediateRender: false,
         })
         .progress(1);
 
@@ -221,14 +232,40 @@ export default function Header({
       // Reverse — такой же резкий глитч-вход.
       const strips = gsap.utils.toArray<HTMLElement>("[data-tv-strip]");
 
+      // fromTo вместо to у всего, чьё состояние покоя теперь «спрятано»:
+      // разметка приходит с сервера уже погашенной, и .to записал бы стартом
+      // текущее (невидимое) состояние — reverse не включал бы ничего.
+      // Стартовые значения задаём явно, и они ровно те, что описывает класс
+      // opacity-100 в покое. Хореография — тайминги, смещения, easing,
+      // разбросы — не менялась ни на йоту.
+      //
+      // immediateRender разный, и это НЕ небрежность:
+      //
+      // • у твина трансформа — false. По умолчанию fromTo применяет
+      //   from-состояние сразу при создании, даже в паузе; здесь это лишний
+      //   писк в DOM, и без него спокойнее.
+      // • у твинов прозрачности — по умолчанию (true). С false они не
+      //   восстанавливались на reverse: проверено замером — трансформ
+      //   откатывался, а opacity залипала на нуле, и полотно не зажигалось
+      //   при скролле. Риска это не несёт: скрытость в покое держит КЛАСС
+      //   (invisible), а visibility классу не перебить инлайновой opacity —
+      //   так что мелькнуть кремовым по кремовому полосы не могут.
       const tvOff = gsap
-        .timeline({ paused: true })
-        // сбой питания: два жёстких моргания всего полотна
+        .timeline({
+          paused: true,
+          // Полотно догорело — только теперь текст имеет право стать
+          // кремовым. Пока полосы видны, barOn остаётся true и текст тёмный.
+          onComplete: () => setBarOn(false),
+        })
+        // сбой питания: два жёстких моргания всего полотна.
+        // Здесь .to намеренно: у bgRef оба конца таймлайна — opacity: 1,
+        // разночтения быть не может, и разметка его не гасит.
         .to(bgRef.current, { opacity: 0.55, duration: 0.04, ease: "steps(1)" }, 0)
         .to(bgRef.current, { opacity: 1, duration: 0.04, ease: "steps(1)" }, 0.05)
         // полосы дёргаются вбок и рвутся — смещения кратны 8px, «пиксельно»
-        .to(
+        .fromTo(
           strips,
+          { x: 0, scaleX: 1, transformOrigin: "50% 50%" },
           {
             x: () => gsap.utils.random(-64, 64, 8),
             scaleX: () => gsap.utils.random(0.2, 0.9, 0.1),
@@ -237,14 +274,22 @@ export default function Header({
             duration: 0.12,
             ease: "steps(2)",
             stagger: { each: 0.012, from: "random" },
+            immediateRender: false,
           },
           0.1
         )
-        // и гаснут ступенькой, вразнобой
-        .to(
+        // и гаснут ступенькой, вразнобой.
+        // opacity, а не autoAlpha: autoAlpha пишет ещё и visibility, а она
+        // теперь принадлежит классу (invisible при barOn=false). Плюс
+        // autoAlpha не восстанавливается при reverse — проверено: transform
+        // откатывался, а видимость залипала на hidden, и полотно не зажигалось.
+        // Полосы декоративные (aria-hidden), кликать в них нечего — opacity
+        // достаточно.
+        .fromTo(
           strips,
+          { opacity: 1 },
           {
-            autoAlpha: 0,
+            opacity: 0,
             duration: 0.08,
             ease: "steps(1)",
             stagger: { each: 0.01, from: "random" },
@@ -252,20 +297,62 @@ export default function Header({
           0.2
         )
         // линия: обрывок — и в ноль
-        .to(
+        .fromTo(
           lineRef.current,
-          { scaleX: 0.3, duration: 0.06, ease: "steps(1)" },
+          { scaleX: 1 },
+          {
+            scaleX: 0.3,
+            duration: 0.06,
+            ease: "steps(1)",
+            immediateRender: false,
+          },
           0.1
         )
-        .to(
+        .fromTo(
           lineRef.current,
-          { autoAlpha: 0, duration: 0.05, ease: "steps(1)" },
+          { opacity: 1 },
+          { opacity: 0, duration: 0.05, ease: "steps(1)" },
           0.22
         );
 
-      // Страница грузится на самом верху — фон уже «выключен»
-      tvOff.progress(1);
-      tvRef.current = tvOff;
+      // Разметка пришла уже «выключенной» — ставим таймлайн в тот же конец.
+      // Второй аргумент suppressEvents: onComplete не должен стрелять на
+      // служебном прыжке, иначе setBarOn поедет мимо applyBar.
+      tvOff.progress(1, true);
+
+      // Единственная точка переключения полотна. animate=false — мгновенно
+      // (загрузка, восстановление скролла после F5), animate=true — с глитчем.
+      let barWanted = false;
+      const applyBar = (next: boolean, animate: boolean) => {
+        if (next === barWanted) return;
+        barWanted = next;
+
+        if (next) {
+          // Текст темнеет сразу: полотно уже едет, а переход 300мс его
+          // догонит. Тёмное по кремовому в худшем случае бледновато, но
+          // никогда не сливается.
+          setBarOn(true);
+          if (animate) tvOff.reverse();
+          else tvOff.progress(0, true);
+        } else if (animate) {
+          // barOn снимет onComplete — когда полос уже не будет
+          tvOff.play();
+        } else {
+          tvOff.progress(1, true);
+          setBarOn(false);
+        }
+      };
+
+      // Стартовая синхронизация с РЕАЛЬНОЙ позицией скролла: без неё
+      // перезагрузка на прокрученной странице оставляла barOn=false, то есть
+      // кремовый текст поверх кремовых секций.
+      // window читаем ТОЛЬКО здесь: useGSAP — layout-эффект, на сервере он не
+      // выполняется (SSR всегда отдаёт barOn=false, гидрация совпадает),
+      // а на клиенте отрабатывает до пейнта, так что перерисовки не видно.
+      applyBar(
+        (window.scrollY || document.documentElement.scrollTop || 0) > 100,
+        false
+      );
 
       // Прозрачная ТОЛЬКО на самом верху (первые 100px, момент загрузки).
       // Дальше — светлая везде, включая зону видео при скролле вверх.
@@ -273,26 +360,55 @@ export default function Header({
       ScrollTrigger.create({
         start: 0,
         end: "max",
+        // refresh стреляет и при создании триггера, и после window load /
+        // resize — то есть уже ПОСЛЕ того, как браузер восстановил позицию
+        // скролла при F5. Один замер выше это не ловит: там восстановление
+        // могло ещё не произойти. Повторный вызов гасит guard в applyBar.
+        onRefresh: (self) => applyBar(self.scroll() > 100, false),
         onUpdate: (self) => {
           const y = self.scroll();
-          setScrolled(y > 100);
+          applyBar(y > 100, true);
           if (y <= 120 || self.direction === -1) showAnim.play();
           else showAnim.reverse();
         },
       });
 
+      // Страховка. gsap.from ставит стартовое состояние (autoAlpha: 0)
+      // СРАЗУ при создании твина, а видимость возвращает только доиграв.
+      // Значит любая заминка — ошибка в соседнем эффекте, прерванный
+      // тикер, «отравленный» Fast Refresh — оставляет шапку пустой
+      // навсегда: логотип успел проявиться, остальное так и висит
+      // на нуле прозрачности. Через 3с принудительно снимаем инлайновые
+      // стили, если таймлайн почему-то не дошёл до конца. Нормальный
+      // прогон укладывается в ~1.2с, так что в штатном случае страховка
+      // просто не срабатывает.
+      // querySelectorAll по ref, а не строковый селектор: скоуп useGSAP
+      // действует только на вызовы внутри тела колбэка, а этот код
+      // выполнится позже, уже вне его — строка искала бы по всему документу.
+      const safety = window.setTimeout(() => {
+        if (intro.progress() < 1) {
+          const items = ref.current?.querySelectorAll("[data-nav-item]");
+          if (items?.length) gsap.set(items, { clearProps: "all" });
+          gsap.set(barRef.current, { clearProps: "opacity,visibility" });
+        }
+
+        // Полотно застряло на полпути — роняем инлайн-стили полос и линии.
+        // Базовое состояние теперь живёт в классах от barOn, а barOn — то же
+        // значение, которым покрашен текст, так что после сброса они заведомо
+        // согласованы. Раньше такой сброс сделал бы полосы кремовыми под
+        // кремовым текстом, поэтому страховка их и не трогала.
+        const p = tvOff.progress();
+        if (p > 0 && p < 1) {
+          const s = ref.current?.querySelectorAll("[data-tv-strip]");
+          if (s?.length) gsap.set(s, { clearProps: "all" });
+          gsap.set(lineRef.current, { clearProps: "all" });
+        }
+      }, 3000);
+
       return () => window.clearTimeout(safety);
     },
     { scope: ref }
   );
-
-  // scrolled=false → play (выключение ТВ), scrolled=true → reverse (включение)
-  useEffect(() => {
-    const tv = tvRef.current;
-    if (!tv) return;
-    if (scrolled) tv.reverse();
-    else tv.play();
-  }, [scrolled]);
 
   // Мобильное меню: ОДИН постоянный таймлайн, вперёд на открытие и
   // реверсом на закрытие.
@@ -384,17 +500,30 @@ export default function Header({
     []
   );
 
+  // Базовое, НЕ анимационное состояние полотна и линии. Во время твина GSAP
+  // пишет инлайн-стили и побеждает класс; но оба конца твина — ровно эти два
+  // классовых состояния, поэтому в покое класс и инлайн всегда совпадают.
+  // Если GSAP не отработал вовсе (упала гидрация, дерево пересобралось) —
+  // читается класс, и шапка всё равно корректна.
+  // opacity-0 И invisible вместе: autoAlpha у GSAP пишет обе величины,
+  // и пара должна зеркалить его один в один.
+  const canvas = barOn ? "opacity-100" : "opacity-0 invisible";
+
   return (
     // Сам header всегда прозрачный: светлое полотно и линия — отдельные
     // слои-«кинескопы» (bgRef/lineRef), которыми управляет tvOff-таймлайн.
     // Цвет текста переключается плавно.
     <header
       ref={ref}
+      // data-site-header / data-bar — опора для правила «без JS» в globals.css
+      // и одна греппаемая точка для отладки: состояние шапки видно в DOM.
+      data-site-header
+      data-bar={barOn ? "on" : "off"}
       className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
         // Прозрачное состояние: кремовый текст поверх тёмного видео главной,
         // но тёмный — поверх светлого фона внутренних страниц, иначе логотип
         // сливается с фоном. Сам эффект прозрачности при этом сохраняется.
-        scrolled || !darkHero ? "text-ink" : "text-cream"
+        barOn || !darkHero ? "text-ink" : "text-cream"
       }`}
     >
       {/* Обёртка со всеми слоями шапки. Именно она ездит по Y и гаснет —
@@ -410,7 +539,11 @@ export default function Header({
           <div
             key={i}
             data-tv-strip
-            className="absolute inset-x-0 bg-[#EAE8E4]"
+            // bg-cream — ТОТ ЖЕ токен, что и text-cream (#eae8e4). Написано
+            // токеном, а не хексом, чтобы связь «полотно = цвет текста» была
+            // видна прямо в коде: text-cream законен ровно тогда, когда полосы
+            // погашены, и ни в какой другой момент.
+            className={`absolute inset-x-0 bg-cream ${canvas}`}
             style={{ top: `${(i / 7) * 100}%`, height: `${100 / 7 + 0.3}%` }}
           />
         ))}
@@ -418,8 +551,9 @@ export default function Header({
       {/* Тонкая линия по низу: обрывается вместе с глитчем */}
       <div
         ref={lineRef}
+        data-header-line
         aria-hidden
-        className="absolute inset-x-0 bottom-0 -z-10 h-px origin-left bg-black"
+        className={`absolute inset-x-0 bottom-0 -z-10 h-px origin-left bg-black ${canvas}`}
       />
 
       <div className="flex h-[100px] items-center justify-between px-6 lg:px-10">
@@ -438,13 +572,16 @@ export default function Header({
             data-header-logo
             aria-label={dict.nav.home}
             className={`shrink-0 text-[32px] font-black tracking-normal transition-colors duration-300 ${
-              darkHero || scrolled ? "" : "text-blush"
+              darkHero || barOn ? "" : "text-blush"
             }`}
           >
             .adswebai
           </Link>
 
-          <div data-nav-item className="hidden lg:flex">
+          {/* xl, а не lg: логотип shrink-0 не сжимается, и на 1024–1240px
+              он вместе с кубом наезжал на «Solutions» — меню физически
+              помещается только с ~1240px. До этого работает бургер. */}
+          <div data-nav-item className="hidden xl:flex">
             <LanguageSwitcher locale={locale} dict={dict} />
           </div>
         </div>
@@ -452,7 +589,7 @@ export default function Header({
         <div className="flex shrink-0 items-center gap-10">
           <ul
             data-header-nav
-            className="fs-label hidden items-center gap-10 font-medium lg:flex"
+            className="fs-label hidden items-center gap-10 font-medium xl:flex"
           >
             {NAV.map((item) => (
               <li
@@ -520,7 +657,7 @@ export default function Header({
             href={href(locale, "/contact")}
             data-btn-hover
             data-nav-item
-            className="hidden lg:block"
+            className="hidden xl:block"
           >
             {/* На светлой шапке: область #222824, надпись и стрелка белые.
                 На прозрачной поверх тёмного видео — кремовая с тёмным текстом.
@@ -530,7 +667,7 @@ export default function Header({
               label={dict.nav.connect}
               href={null}
               colorClass={
-                scrolled || !darkHero
+                barOn || !darkHero
                   ? "bg-[#222824] text-white"
                   : "bg-cream text-ink"
               }
@@ -562,7 +699,7 @@ export default function Header({
         aria-label={menuOpen ? dict.nav.menuClose : dict.nav.menuOpen}
         aria-expanded={menuOpen}
         data-nav-item
-        className={`absolute right-6 top-1/2 z-50 h-[20px] w-[40px] -translate-y-1/2 transition-colors duration-300 after:absolute after:-inset-x-[4px] after:-inset-y-[14px] after:content-[''] lg:hidden ${
+        className={`absolute right-6 top-1/2 z-50 h-[20px] w-[40px] -translate-y-1/2 transition-colors duration-300 after:absolute after:-inset-x-[4px] after:-inset-y-[14px] after:content-[''] xl:hidden ${
           menuOpen ? "text-cream" : ""
         }`}
       >
@@ -592,7 +729,7 @@ export default function Header({
           с подменю, стрелка у прямых ссылок. */}
       <div
         ref={menuRef}
-        className="invisible fixed inset-x-0 top-0 z-40 flex h-[100dvh] flex-col overflow-y-auto overscroll-contain bg-[#191715] px-6 text-cream lg:hidden"
+        className="invisible fixed inset-x-0 top-0 z-40 flex h-[100dvh] flex-col overflow-y-auto overscroll-contain bg-[#191715] px-6 text-cream xl:hidden"
         style={{
           // Центр эллипса больше не едет — только радиусы. 150% с запасом
           // накрывают дальний угол (нужно ≥128%), а прежний проезд центра
