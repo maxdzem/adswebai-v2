@@ -62,11 +62,13 @@ function Panel({
 }: {
   locale: Locale;
   onPick: (l: Locale) => void;
-  /** Острые углы у строк — для панели куба, где вся форма прямоугольная */
+  /** Острые углы и компактная типографика — для панели куба: её высота
+   *  зажата между верхом значка и чёрной линией низа шапки (68px), обычный
+   *  fs-label туда не помещается на 3+ строках. */
   square?: boolean;
 }) {
   return (
-    <ul className="p-1.5">
+    <ul className={square ? "p-1" : "p-1.5"}>
       {LOCALES.map((l) => {
         const active = l === locale;
         return (
@@ -79,8 +81,8 @@ function Panel({
               data-lang-item
               type="button"
               onClick={() => onPick(l)}
-              className={`group flex w-full items-center gap-2.5 px-3.5 py-2 text-left transition-colors duration-200 hover:bg-ink/[0.07] ${
-                square ? "rounded-none" : "rounded-[8px]"
+              className={`group flex w-full items-center gap-2 text-left transition-colors duration-200 hover:bg-ink/[0.07] ${
+                square ? "rounded-none px-2.5 py-1" : "rounded-[8px] px-3.5 py-2"
               }`}
             >
               <span
@@ -90,9 +92,9 @@ function Panel({
                 }`}
               />
               <span
-                className={`fs-label transition-transform duration-200 group-hover:translate-x-1 ${
-                  active ? "font-medium text-ink" : "text-ink/70"
-                }`}
+                className={`transition-transform duration-200 group-hover:translate-x-1 ${
+                  square ? "text-[13px] leading-tight" : "fs-label"
+                } ${active ? "font-medium text-ink" : "text-ink/70"}`}
               >
                 {LOCALE_LABEL[l]}
               </span>
@@ -307,10 +309,12 @@ export default function LanguageSwitcher({
     router.push(swapLocale(pathname, code));
   };
 
-  // Скругление — отдельным классом: у кубика (dot) панель прямоугольная,
-  // острыми углами вслед за самим значком, у пилюли — как раньше
+  // Скругление и overflow — отдельными классами на каждый вариант:
+  // у кубика (dot) панель прямоугольная и с внутренним скроллом (её
+  // высота зажата между верхом значка и чёрной линией низа шапки),
+  // у пилюли — как раньше, скруглённая и растущая по контенту
   const panelClass =
-    "invisible absolute z-30 w-[min(220px,calc(100vw-3rem))] overflow-hidden border border-ink/15 bg-white text-ink opacity-0 shadow-[0_28px_60px_-20px_rgba(0,0,0,0.35)]";
+    "invisible absolute z-30 w-[min(220px,calc(100vw-3rem))] border border-ink/15 bg-white text-ink opacity-0 shadow-[0_28px_60px_-20px_rgba(0,0,0,0.35)]";
 
   if (variant === "pill") {
     return (
@@ -325,7 +329,7 @@ export default function LanguageSwitcher({
             выпадение из-под самой кнопки */}
         <div
           ref={panelRef}
-          className={`${panelClass} rounded-[12px] left-1/2 -translate-x-1/2 ${
+          className={`${panelClass} overflow-hidden rounded-[12px] left-1/2 -translate-x-1/2 ${
             placement === "up" ? "bottom-[calc(100%+14px)]" : "top-[calc(100%+14px)]"
           }`}
         >
@@ -381,9 +385,16 @@ export default function LanguageSwitcher({
     );
   }
 
-  // dot — шапка, сразу после логотипа
+  // dot — шапка, сразу после логотипа.
+  // rootRef растянут на всю высоту бара (100px, как у самой шапки) —
+  // не по своему контенту, как раньше. Так у куба и у панели появляется
+  // общий, точно известный ориентир по вертикали: 100% этой обёртки —
+  // это низ шапки, где проходит чёрная линия. Куб абсолютно центрируется
+  // внутри неё (top-1/2 -translate-y-1/2), а не выравнивается флексом —
+  // без этого верх куба гулял бы на пару пикселей от метрик шрифта
+  // логотипа, и панель ниже не могла бы встать вровень с ним.
   return (
-    <div ref={rootRef} className="relative flex items-center">
+    <div ref={rootRef} className="relative h-[100px] shrink-0">
       {/* Фирменный значок: розовый квадрат С ОСТРЫМИ УГЛАМИ, символ языка —
           белым по нему напрямую, без круга-подложки. Настоящий 4-гранный
           куб, как в референсе: perspective на неподвижной обёртке, сама
@@ -395,7 +406,7 @@ export default function LanguageSwitcher({
           участвуют в единственном используемом повороте 0↔90°, но делают
           коробку настоящей, а не бутафорской с одной стороной */}
       <div
-        className="relative z-10 h-9 w-9 shrink-0"
+        className="absolute left-0 top-1/2 z-10 h-9 w-9 shrink-0 -translate-y-1/2"
         style={{ perspective: 600 }}
       >
         <button
@@ -441,13 +452,17 @@ export default function LanguageSwitcher({
         </button>
       </div>
 
-      {/* Панель раскрывается вправо от квадрата, вровень по вертикали
-          с его центром — не вниз, как раньше. Острые углы (rounded-none),
-          в отличие от пилюльного варианта, — вслед за самим кубом,
-          у которого их нет вовсе */}
+      {/* Панель раскрывается вправо от квадрата, вровень с его верхним
+          краем (top: calc(50%-18px) — то же вычисление центра, что и у
+          самого куба, minus половина его высоты) и не ниже чёрной линии
+          внизу шапки: rootRef ровно 100px, поэтому запас до неё —
+          100% - 32px = 68px. max-h вместо h — панель не тянется на все
+          68px ради двух языков, но и вырасти больше не может: третий,
+          четвёртый язык уйдут во внутренний скролл, а не сдвинут низ
+          панели за линию. Острые углы — как у куба, не как у пилюли */}
       <div
         ref={panelRef}
-        className={`${panelClass} rounded-none left-[calc(100%+14px)] top-1/2 -translate-y-1/2`}
+        className={`${panelClass} overflow-y-auto rounded-none left-[calc(100%+14px)] top-[calc(50%-18px)] max-h-[68px]`}
       >
         <Panel locale={locale} onPick={pick} square />
       </div>
