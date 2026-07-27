@@ -13,17 +13,10 @@ import type { Dict } from "@/content/dict";
 
 /** Желаемая ширина раскрытой пилюли с заголовком в шапке. */
 const PILL_W = 268;
-/** Круг с шевроном (44px) + зазор — их место надо оставить свободным. */
-const CHEV_SPACE = 52;
-/** Запас до меню справа, чтобы пилюля к нему не прижималась. */
-const SIDE_GAP = 24;
-/** Ниже этой ширины пилюля не раскрывается: незачем — текст всё равно
- *  не поместится, а раскрытие полезло бы на соседние элементы. */
-const PILL_MIN = 150;
 
-function GlobeIcon() {
+function GlobeIcon({ size = 20 }: { size?: number }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
       <path
         d="M3 12h18M12 3c2.4 2.4 3.6 5.4 3.6 9s-1.2 6.6-3.6 9c-2.4-2.4-3.6-5.4-3.6-9S9.6 5.4 12 3z"
@@ -120,11 +113,8 @@ export default function LanguageSwitcher({
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  // Триггер в шапке: точка раскрывается в пилюлю с названием языка
-  const pillRef = useRef<HTMLButtonElement>(null);
-  const globeRef = useRef<HTMLSpanElement>(null);
-  const labelRef = useRef<HTMLSpanElement>(null);
-  const chevRef = useRef<HTMLButtonElement>(null);
+  // Триггер в шапке: фирменный значок-«кубик», разворачивается 3D-flip'ом
+  const cubeRef = useRef<HTMLButtonElement>(null);
   // Футерная пилюля: подпись переключается с текущего языка на заголовок
   const pillCurrentRef = useRef<HTMLSpanElement>(null);
   const pillChooseRef = useRef<HTMLSpanElement>(null);
@@ -143,11 +133,8 @@ export default function LanguageSwitcher({
       gsap.set("[data-lang-item]", { autoAlpha: 0, y: 8 });
 
       if (variant === "dot") {
-        // Свёрнуто: круг 44px с глобусом, ни названия, ни шеврона
-        gsap.set(pillRef.current, { width: 44 });
-        gsap.set(globeRef.current, { autoAlpha: 1, scale: 1 });
-        gsap.set(labelRef.current, { autoAlpha: 0, x: -10 });
-        gsap.set(chevRef.current, { scale: 0, autoAlpha: 0 });
+        // Свёрнуто: значок стоит лицевой (розовой) гранью к зрителю
+        gsap.set(cubeRef.current, { rotationX: 0 });
       } else if (!compact) {
         // Свёрнуто: видно текущий язык, заголовок скрыт под ним.
         // В compact второй подписи нет — перелистывать нечего
@@ -165,48 +152,15 @@ export default function LanguageSwitcher({
     const ctx = gsap.context(() => {
       if (open) {
         if (variant === "dot") {
-          // Переключатель стоит сразу после логотипа и растёт вправо —
-          // раньше он был центрирован по всей ширине зазора до меню и
-          // рос симметрично от центра, значит наехать мог на любую
-          // сторону. Теперь левый край неподвижен (рядом с логотипом),
-          // поэтому мерить нужно только запас до меню.
-          const header = rootRef.current?.closest("header");
-          const nav = header?.querySelector("[data-header-nav]");
-          const triggerLeft = rootRef.current?.getBoundingClientRect().left ?? 0;
-
-          const rightEdge =
-            nav?.getBoundingClientRect().left ?? window.innerWidth;
-          const room = rightEdge - triggerLeft - SIDE_GAP - CHEV_SPACE;
-
-          const target = Math.max(44, Math.min(PILL_W, room));
-
-          gsap.to(pillRef.current, {
-            width: target < PILL_MIN ? 44 : target,
-            duration: 0.45,
-            ease: "power3.out",
-            overwrite: "auto",
-          });
-          gsap.to(globeRef.current, {
-            autoAlpha: 0,
-            scale: 0.5,
-            duration: 0.15,
-            ease: "power2.in",
-            overwrite: "auto",
-          });
-          gsap.to(labelRef.current, {
-            autoAlpha: 1,
-            x: 0,
-            duration: 0.35,
-            delay: 0.12,
-            ease: "power3.out",
-            overwrite: "auto",
-          });
-          gsap.to(chevRef.current, {
-            scale: 1,
-            autoAlpha: 1,
-            duration: 0.35,
-            delay: 0.1,
-            ease: "back.out(1.6)",
+          // Значок разворачивается на 180° вокруг горизонтальной оси —
+          // розовая грань (закрыто) уходит назад, тёмная грань со
+          // стрелкой (открыто) встаёт на её место лицом к зрителю.
+          // Раньше здесь круг растягивался в пилюлю с текстом — заменено
+          // на flip, ближе к референсу с 3D-кубом
+          gsap.to(cubeRef.current, {
+            rotationX: 180,
+            duration: 0.5,
+            ease: "power3.inOut",
             overwrite: "auto",
           });
         }
@@ -253,34 +207,12 @@ export default function LanguageSwitcher({
         // Закрытие мягче открытия: элементы уходят по очереди, все
         // изинги — inOut, поэтому движение не обрывается, а затухает
         if (variant === "dot") {
-          gsap.to(chevRef.current, {
-            scale: 0,
-            autoAlpha: 0,
-            duration: 0.3,
+          // Флип обратно — чуть быстрее открытия, симметрично закрытию
+          // мобильного меню и других оверлеев в проекте
+          gsap.to(cubeRef.current, {
+            rotationX: 0,
+            duration: 0.4,
             ease: "power2.inOut",
-            overwrite: "auto",
-          });
-          gsap.to(labelRef.current, {
-            autoAlpha: 0,
-            x: -8,
-            duration: 0.26,
-            ease: "power2.inOut",
-            overwrite: "auto",
-          });
-          // Пилюля сжимается неспешно и стартует, когда подпись уже угасла
-          gsap.to(pillRef.current, {
-            width: 44,
-            duration: 0.55,
-            delay: 0.16,
-            ease: "power2.inOut",
-            overwrite: "auto",
-          });
-          gsap.to(globeRef.current, {
-            autoAlpha: 1,
-            scale: 1,
-            duration: 0.32,
-            delay: 0.38,
-            ease: "power2.out",
             overwrite: "auto",
           });
         }
@@ -435,42 +367,44 @@ export default function LanguageSwitcher({
   // dot — шапка, сразу после логотипа
   return (
     <div ref={rootRef} className="relative flex items-center">
-      {/* Триггер: свёрнут — круг с глобусом, раскрыт — пилюля с языком
-          и отдельный круг с шевроном. Стоит в потоке рядом с логотипом
-          (без absolute-центрирования по всей ширине шапки, как раньше) —
-          пилюля растёт вправо, на своём месте, а не «от центра шапки» */}
-      <div className="relative z-10 flex items-center gap-2">
+      {/* Фирменный значок: розовый квадрат со вписанным кругом — тот же
+          мотив, что у аватара в контактной форме и в фавиконе. Триггер
+          не растёт в пилюлю, а разворачивается на 180° вокруг
+          горизонтальной оси, как кубик: closed — розовая грань с белым
+          кругом и символом языка; open — тёмная грань с розовым кругом
+          и шевроном. perspective — на неподвижной обёртке (иначе объём
+          не читается), сам flip — на кнопке через transform-style */}
+      <div
+        className="relative z-10 h-11 w-11 shrink-0"
+        style={{ perspective: 600 }}
+      >
         <button
-          ref={pillRef}
+          ref={cubeRef}
           type="button"
           onClick={() => setOpen((v) => !v)}
-          aria-label={dict.lang.change}
+          aria-label={open ? dict.lang.close : dict.lang.change}
           aria-expanded={open}
-          className="relative grid h-[44px] w-[44px] shrink-0 place-items-center overflow-hidden rounded-full bg-[#2d2d2d] text-white/90"
+          className="relative block h-11 w-11 outline-none [transform-style:preserve-3d]"
         >
-          <span ref={globeRef} className="grid place-items-center">
-            <GlobeIcon />
+          {/* Закрытая грань: без собственного поворота — лежит в той же
+              плоскости, что и кнопка, поэтому видна первой */}
+          <span className="absolute inset-0 grid place-items-center rounded-[14px] bg-blush [backface-visibility:hidden]">
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-ink">
+              <GlobeIcon size={14} />
+            </span>
           </span>
-          <span
-            ref={labelRef}
-            className="fs-label absolute left-6 whitespace-nowrap font-medium opacity-0"
-          >
-            {dict.lang.choose}
-          </span>
-        </button>
 
-        <button
-          ref={chevRef}
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-hidden={!open}
-          tabIndex={open ? 0 : -1}
-          aria-label={dict.lang.close}
-          className={`grid h-[44px] w-[44px] shrink-0 scale-0 place-items-center rounded-full bg-[#2d2d2d] text-white/90 opacity-0 transition-transform duration-300 ${
-            open ? "rotate-180" : ""
-          }`}
-        >
-          <Chevron />
+          {/* Открытая грань: развёрнута на 180° заранее — когда кнопка
+              довернётся до конца, суммарный поворот даст 360°, и грань
+              встанет прямо, а не вверх ногами */}
+          <span
+            className="absolute inset-0 grid place-items-center rounded-[14px] bg-[#2d2d2d] [backface-visibility:hidden]"
+            style={{ transform: "rotateX(180deg)" }}
+          >
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-blush text-ink">
+              <Chevron />
+            </span>
+          </span>
         </button>
       </div>
 
