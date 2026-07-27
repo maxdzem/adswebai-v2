@@ -132,6 +132,18 @@ export default function LanguageSwitcher({
   const panelRef = useRef<HTMLDivElement>(null);
   // Триггер в шапке: фирменный значок-«кубик», разворачивается 3D-flip'ом
   const cubeRef = useRef<HTMLButtonElement>(null);
+  // Внутренний под-куб, отвечающий ТОЛЬКО за цвет языка (вращение по Y).
+  // Раньше язык крутился на том же элементе, что открытие/закрытие
+  // (rotationX) — на RU кубик в покое уже стоял с rotationY:180, и клик
+  // добавлял к нему ещё rotationX:90 НА ОДНОМ И ТОМ ЖЕ элементе. Два
+  // поворота на разных осях одного transform не складываются как
+  // независимые: результат — не «грань bottom прямо перед зрителем»,
+  // а некоторый диагональный поворот куба, из-за чего треугольник на
+  // открытой грани не вставал на место. Вложенный элемент разносит
+  // оси по разным узлам: внешний cubeRef крутится только по X
+  // (открытие), внутренний langCubeRef — только по Y (язык), и они
+  // больше не комбинируются на одной матрице.
+  const langCubeRef = useRef<HTMLSpanElement>(null);
   // Футерная пилюля: подпись переключается с текущего языка на заголовок
   const pillCurrentRef = useRef<HTMLSpanElement>(null);
   const pillChooseRef = useRef<HTMLSpanElement>(null);
@@ -388,21 +400,22 @@ export default function LanguageSwitcher({
     setPreviewIndex(localeIndex);
   };
 
-  // Первый рендер: куб должен СРАЗУ стоять на грани текущего языка
+  // Первый рендер: под-куб должен СРАЗУ стоять на грани текущего языка
   // страницы (например, открыли /ru — сразу фиолетовая), без анимации.
-  // Doеё все следующие смены previewIndex (колесо, сброс на mouseleave)
-  // — уже настоящий, видимый доворот.
+  // Все следующие смены previewIndex (колесо, сброс на mouseleave) —
+  // уже настоящий, видимый доворот. Крутим langCubeRef, а НЕ cubeRef —
+  // см. комментарий у объявления рефа.
   const cubeMounted = useRef(false);
   useEffect(() => {
-    if (variant !== "dot" || !cubeRef.current) return;
+    if (variant !== "dot" || !langCubeRef.current) return;
 
     if (!cubeMounted.current) {
-      gsap.set(cubeRef.current, { rotationY: previewIndex * 180 });
+      gsap.set(langCubeRef.current, { rotationY: previewIndex * 180 });
       cubeMounted.current = true;
       return;
     }
 
-    gsap.to(cubeRef.current, {
+    gsap.to(langCubeRef.current, {
       rotationY: previewIndex * 180,
       duration: 0.5,
       ease: "power2.out",
@@ -574,44 +587,59 @@ export default function LanguageSwitcher({
           className="relative block h-9 w-9 outline-none [transform-style:preserve-3d] focus-visible:ring-2 focus-visible:ring-cream/60"
           style={{ transform: "translateZ(-18px)" }}
         >
-          {/* front — EN, закрыто: символ языка белым по розовому, без круга */}
+          {/* «Слот» передней грани куба: сам НЕ вращается (только
+              translateZ на глубину куба), поэтому при открытии/закрытии
+              (rotationX внешней кнопки) уходит и возвращается ЦЕЛИКОМ,
+              вместе с тем, что внутри — независимо от того, какой язык
+              там сейчас показан. preserve-3d обязателен: иначе браузер
+              схлопнул бы вложенный langCubeRef в плоскость */}
           <span
-            className="absolute inset-0 grid place-items-center bg-blush text-white [backface-visibility:hidden]"
+            className="absolute inset-0 [transform-style:preserve-3d]"
             style={{ transform: "translateZ(18px)" }}
           >
-            <GlobeIcon size={22} />
-          </span>
+            {/* Под-куб языка: крутится ТОЛЬКО по Y, полностью отдельно
+                от открытия/закрытия. Тонкий (halfZ=9 вместо 18) — ему не
+                нужна глубина всего куба, только чтобы ось прошла по центру */}
+            <span
+              ref={langCubeRef}
+              className="absolute inset-0 [transform-style:preserve-3d]"
+              style={{ transform: "translateZ(-9px)" }}
+            >
+              {/* EN — фирменный розовый #FF0091, как в фавиконе вкладки */}
+              <span
+                className="absolute inset-0 grid place-items-center bg-[#FF0091] text-white [backface-visibility:hidden]"
+                style={{ transform: "translateZ(9px)" }}
+              >
+                <GlobeIcon size={22} />
+              </span>
 
-          {/* langB — RU: та же грань, что front, но развёрнутая на 180°
-              по Y (не по X, эта ось занята open/close). Доворот кубика
-              колёсиком с 0 до 180° показывает именно её — фиолетовый
-              вместо розового сигналит смену языка ещё до подтверждения */}
-          <span
-            className="absolute inset-0 grid place-items-center bg-grape text-white [backface-visibility:hidden]"
-            style={{ transform: "rotateY(180deg) translateZ(18px)" }}
-          >
-            <GlobeIcon size={22} />
+              {/* RU — та же грань, развёрнутая на 180° по Y. Доворот
+                  колёсиком с 0 до 180° показывает именно её */}
+              <span
+                className="absolute inset-0 grid place-items-center bg-grape text-white [backface-visibility:hidden]"
+                style={{ transform: "rotateY(180deg) translateZ(9px)" }}
+              >
+                <GlobeIcon size={22} />
+              </span>
+            </span>
           </span>
 
           {/* top — верх коробки, чтобы при довороте по X не зияла пустота */}
           <span
-            className="absolute inset-0 bg-blush [backface-visibility:hidden]"
+            className="absolute inset-0 bg-[#FF0091] [backface-visibility:hidden]"
             style={{ transform: "rotateX(90deg) translateZ(18px)" }}
           />
 
-          {/* Грани «back» здесь СПЕЦИАЛЬНО нет. rotateX(180deg) translateZ(18px)
-              и rotateY(180deg) translateZ(18px) — это одна и та же плоскость
-              z = -18: пустая тёмная back лежала ровно на языковой грани выше
-              и, идя позже в DOM, перекрывала её. Из-за этого на /ru значок
-              был тёмным квадратом без иконки вместо фиолетового с глобусом.
-              Заднюю сторону закрывает языковая грань, дырки не видно. */}
+          {/* Грани «back» здесь нет — она и не нужна: внешний куб ходит
+              только 0↔90° по X (front-slot ↔ bottom), до 180° никогда
+              не доворачивается, значит истинная задняя грань (z=-18)
+              просто никогда не оказывается лицом к зрителю */}
 
           {/* bottom — открыто: доворот на 90° приводит именно её лицом
-              к зрителю (см. комментарий у анимации открытия). Крупный
-              залитый треугольник вниз вместо шеврона — фирменный розовый
-              на тёмной грани */}
+              к зрителю. Крупный залитый треугольник вниз, тот же
+              фирменный розовый #FF0091, на тёмной грани */}
           <span
-            className="absolute inset-0 grid place-items-center bg-[#2d2d2d] text-blush [backface-visibility:hidden]"
+            className="absolute inset-0 grid place-items-center bg-[#2d2d2d] text-[#FF0091] [backface-visibility:hidden]"
             style={{ transform: "rotateX(-90deg) translateZ(18px)" }}
           >
             <TriangleDown size={24} />

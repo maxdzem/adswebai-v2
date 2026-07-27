@@ -8,8 +8,8 @@ import { ImageResponse } from "next/og";
  * определить размер и падали с ошибкой рендера. PNG понимают все
  * без исключений.
  *
- * Рисунок тот же: розовый круг бренда (--color-blush) и тёмный
- * треугольник (--color-ink) — на светло-розовом белый был бы нечитаем.
+ * Рисунок: фирменный розовый круг #FF0091 и тёмный треугольник поверх —
+ * тот же розовый, что у кубика-переключателя языка в шапке.
  */
 
 export const size = { width: 64, height: 64 };
@@ -25,7 +25,7 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#feafe6",
+          background: "#FF0091",
           borderRadius: "50%",
         }}
       >
