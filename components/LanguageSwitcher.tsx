@@ -405,7 +405,7 @@ export default function LanguageSwitcher({
             className="absolute inset-0 grid place-items-center bg-blush text-white [backface-visibility:hidden]"
             style={{ transform: "translateZ(18px)" }}
           >
-            <GlobeIcon size={18} />
+            <GlobeIcon size={22} />
           </span>
 
           {/* top — не задействована при единственном перелистывании,
@@ -429,7 +429,7 @@ export default function LanguageSwitcher({
             className="absolute inset-0 grid place-items-center bg-[#2d2d2d] text-blush [backface-visibility:hidden]"
             style={{ transform: "rotateX(-90deg) translateZ(18px)" }}
           >
-            <TriangleDown size={20} />
+            <TriangleDown size={24} />
           </span>
         </button>
       </div>
