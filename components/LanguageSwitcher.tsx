@@ -58,9 +58,12 @@ function TriangleDown({ size = 22 }: { size?: number }) {
 function Panel({
   locale,
   onPick,
+  square = false,
 }: {
   locale: Locale;
   onPick: (l: Locale) => void;
+  /** Острые углы у строк — для панели куба, где вся форма прямоугольная */
+  square?: boolean;
 }) {
   return (
     <ul className="p-1.5">
@@ -76,7 +79,9 @@ function Panel({
               data-lang-item
               type="button"
               onClick={() => onPick(l)}
-              className="group flex w-full items-center gap-2.5 rounded-[8px] px-3.5 py-2 text-left transition-colors duration-200 hover:bg-ink/[0.07]"
+              className={`group flex w-full items-center gap-2.5 px-3.5 py-2 text-left transition-colors duration-200 hover:bg-ink/[0.07] ${
+                square ? "rounded-none" : "rounded-[8px]"
+              }`}
             >
               <span
                 aria-hidden
@@ -302,8 +307,10 @@ export default function LanguageSwitcher({
     router.push(swapLocale(pathname, code));
   };
 
+  // Скругление — отдельным классом: у кубика (dot) панель прямоугольная,
+  // острыми углами вслед за самим значком, у пилюли — как раньше
   const panelClass =
-    "invisible absolute z-30 w-[min(220px,calc(100vw-3rem))] overflow-hidden rounded-[12px] border border-ink/15 bg-white text-ink opacity-0 shadow-[0_28px_60px_-20px_rgba(0,0,0,0.35)]";
+    "invisible absolute z-30 w-[min(220px,calc(100vw-3rem))] overflow-hidden border border-ink/15 bg-white text-ink opacity-0 shadow-[0_28px_60px_-20px_rgba(0,0,0,0.35)]";
 
   if (variant === "pill") {
     return (
@@ -318,7 +325,7 @@ export default function LanguageSwitcher({
             выпадение из-под самой кнопки */}
         <div
           ref={panelRef}
-          className={`${panelClass} left-1/2 -translate-x-1/2 ${
+          className={`${panelClass} rounded-[12px] left-1/2 -translate-x-1/2 ${
             placement === "up" ? "bottom-[calc(100%+14px)]" : "top-[calc(100%+14px)]"
           }`}
         >
@@ -434,15 +441,15 @@ export default function LanguageSwitcher({
         </button>
       </div>
 
-      {/* Панель раскрывается вниз прямо из-под кружка, левым краем
-          вровень с ним — не по центру всей шапки, как было.
-          top: calc(100%+14px), а не хардкод — обёртка больше не h-full
-          на все 100px бара, её высота теперь равна высоте самой кнопки */}
+      {/* Панель раскрывается вправо от квадрата, вровень по вертикали
+          с его центром — не вниз, как раньше. Острые углы (rounded-none),
+          в отличие от пилюльного варианта, — вслед за самим кубом,
+          у которого их нет вовсе */}
       <div
         ref={panelRef}
-        className={`${panelClass} left-0 top-[calc(100%+14px)]`}
+        className={`${panelClass} rounded-none left-[calc(100%+14px)] top-1/2 -translate-y-1/2`}
       >
-        <Panel locale={locale} onPick={pick} />
+        <Panel locale={locale} onPick={pick} square />
       </div>
     </div>
   );
