@@ -388,7 +388,7 @@ export default function LanguageSwitcher({
           участвуют в единственном используемом повороте 0↔90°, но делают
           коробку настоящей, а не бутафорской с одной стороной */}
       <div
-        className="relative z-10 h-11 w-11 shrink-0"
+        className="relative z-10 h-9 w-9 shrink-0"
         style={{ perspective: 600 }}
       >
         <button
@@ -397,28 +397,28 @@ export default function LanguageSwitcher({
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? dict.lang.close : dict.lang.change}
           aria-expanded={open}
-          className="relative block h-11 w-11 outline-none [transform-style:preserve-3d] focus-visible:ring-2 focus-visible:ring-cream/60"
-          style={{ transform: "translateZ(-22px)" }}
+          className="relative block h-9 w-9 outline-none [transform-style:preserve-3d] focus-visible:ring-2 focus-visible:ring-cream/60"
+          style={{ transform: "translateZ(-18px)" }}
         >
           {/* front — закрыто: символ языка белым по розовому, без круга */}
           <span
             className="absolute inset-0 grid place-items-center bg-blush text-white [backface-visibility:hidden]"
-            style={{ transform: "translateZ(22px)" }}
+            style={{ transform: "translateZ(18px)" }}
           >
-            <GlobeIcon size={22} />
+            <GlobeIcon size={18} />
           </span>
 
           {/* top — не задействована при единственном перелистывании,
               цвет как у front, чтобы куб не «просвечивал» пустотой */}
           <span
             className="absolute inset-0 bg-blush [backface-visibility:hidden]"
-            style={{ transform: "rotateX(90deg) translateZ(22px)" }}
+            style={{ transform: "rotateX(90deg) translateZ(18px)" }}
           />
 
           {/* back — аналогично top, но со стороны открытой грани */}
           <span
             className="absolute inset-0 bg-[#2d2d2d] [backface-visibility:hidden]"
-            style={{ transform: "rotateX(180deg) translateZ(22px)" }}
+            style={{ transform: "rotateX(180deg) translateZ(18px)" }}
           />
 
           {/* bottom — открыто: доворот на 90° приводит именно её лицом
@@ -427,9 +427,9 @@ export default function LanguageSwitcher({
               на тёмной грани */}
           <span
             className="absolute inset-0 grid place-items-center bg-[#2d2d2d] text-blush [backface-visibility:hidden]"
-            style={{ transform: "rotateX(-90deg) translateZ(22px)" }}
+            style={{ transform: "rotateX(-90deg) translateZ(18px)" }}
           >
-            <TriangleDown size={26} />
+            <TriangleDown size={20} />
           </span>
         </button>
       </div>
