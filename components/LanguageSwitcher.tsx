@@ -82,7 +82,7 @@ function Panel({
               type="button"
               onClick={() => onPick(l)}
               className={`group flex w-full items-center gap-2 text-left transition-colors duration-200 hover:bg-ink/[0.07] ${
-                square ? "rounded-none px-2.5 py-1" : "rounded-[8px] px-3.5 py-2"
+                square ? "rounded-none px-2.5 py-1.5" : "rounded-[8px] px-3.5 py-2"
               }`}
             >
               <span
@@ -93,7 +93,7 @@ function Panel({
               />
               <span
                 className={`transition-transform duration-200 group-hover:translate-x-1 ${
-                  square ? "text-[13px] leading-tight" : "fs-label"
+                  square ? "text-[15px] leading-[18px]" : "fs-label"
                 } ${active ? "font-medium text-ink" : "text-ink/70"}`}
               >
                 {LOCALE_LABEL[l]}
@@ -393,8 +393,13 @@ export default function LanguageSwitcher({
   // внутри неё (top-1/2 -translate-y-1/2), а не выравнивается флексом —
   // без этого верх куба гулял бы на пару пикселей от метрик шрифта
   // логотипа, и панель ниже не могла бы встать вровень с ним.
+  // Ширина — тоже явно w-9 (36px, как у куба): куб absolute, в потоке
+  // rootRef ничего не осталось, и без явной ширины блок схлопывался
+  // в 0 — тогда left-[calc(100%+14px)] у панели считался от нулевой
+  // ширины и панель вставала прямо на куб вместо того, чтобы отступить
+  // за его правый край.
   return (
-    <div ref={rootRef} className="relative h-[100px] shrink-0">
+    <div ref={rootRef} className="relative h-[100px] w-9 shrink-0">
       {/* Фирменный значок: розовый квадрат С ОСТРЫМИ УГЛАМИ, символ языка —
           белым по нему напрямую, без круга-подложки. Настоящий 4-гранный
           куб, как в референсе: perspective на неподвижной обёртке, сама
@@ -454,15 +459,18 @@ export default function LanguageSwitcher({
 
       {/* Панель раскрывается вправо от квадрата, вровень с его верхним
           краем (top: calc(50%-18px) — то же вычисление центра, что и у
-          самого куба, minus половина его высоты) и не ниже чёрной линии
-          внизу шапки: rootRef ровно 100px, поэтому запас до неё —
-          100% - 32px = 68px. max-h вместо h — панель не тянется на все
-          68px ради двух языков, но и вырасти больше не может: третий,
-          четвёртый язык уйдут во внутренний скролл, а не сдвинут низ
-          панели за линию. Острые углы — как у куба, не как у пилюли */}
+          самого куба, minus половина его высоты) и доходит РОВНО до
+          чёрной линии внизу шапки: rootRef 100px, запас от верха куба —
+          100% - 32px = 68px. h-[68px], а не max-h — панель всегда
+          заполняет это место целиком, а не заканчивается раньше времени
+          с двумя короткими языками. Шрифт и отступы строк подобраны
+          так, чтобы ровно в него укладываться (68 = 8 паддинг панели +
+          2 × 30 на строку); третий-четвёртый язык уйдут во внутренний
+          скролл, а не сдвинут низ панели за линию. Острые углы — как
+          у куба, не как у пилюли */}
       <div
         ref={panelRef}
-        className={`${panelClass} overflow-y-auto rounded-none left-[calc(100%+14px)] top-[calc(50%-18px)] max-h-[68px]`}
+        className={`${panelClass} overflow-y-auto rounded-none left-[calc(100%+14px)] top-[calc(50%-18px)] h-[68px]`}
       >
         <Panel locale={locale} onPick={pick} square />
       </div>
