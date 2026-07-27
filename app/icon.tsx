@@ -8,8 +8,9 @@ import { ImageResponse } from "next/og";
  * определить размер и падали с ошибкой рендера. PNG понимают все
  * без исключений.
  *
- * Рисунок: фирменный розовый круг #FF0091 и тёмный треугольник поверх —
- * тот же розовый, что у кубика-переключателя языка в шапке.
+ * Рисунок: фирменный розовый квадрат #FF0091 (острые углы, без
+ * borderRadius — тот же язык формы, что у кубика-переключателя в шапке)
+ * с чёрным #000000 треугольником вершиной вниз поверх.
  */
 
 export const size = { width: 64, height: 64 };
@@ -26,10 +27,10 @@ export default function Icon() {
           alignItems: "center",
           justifyContent: "center",
           background: "#FF0091",
-          borderRadius: "50%",
         }}
       >
-        {/* Треугольник вершиной вверх — через CSS-бордеры:
+        {/* Треугольник вершиной вниз — через CSS-бордеры: border-top
+            вместо border-bottom переворачивает его.
             ImageResponse не поддерживает clip-path */}
         <div
           style={{
@@ -37,7 +38,7 @@ export default function Icon() {
             height: 0,
             borderLeft: "17px solid transparent",
             borderRight: "17px solid transparent",
-            borderBottom: "30px solid #2d2d2d",
+            borderTop: "30px solid #000000",
           }}
         />
       </div>

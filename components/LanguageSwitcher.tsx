@@ -614,9 +614,10 @@ export default function LanguageSwitcher({
               </span>
 
               {/* RU — та же грань, развёрнутая на 180° по Y. Доворот
-                  колёсиком с 0 до 180° показывает именно её */}
+                  колёсиком с 0 до 180° показывает именно её.
+                  Чёрная #000000, а не фиолетовая — по прямому запросу */}
               <span
-                className="absolute inset-0 grid place-items-center bg-grape text-white [backface-visibility:hidden]"
+                className="absolute inset-0 grid place-items-center bg-black text-white [backface-visibility:hidden]"
                 style={{ transform: "rotateY(180deg) translateZ(9px)" }}
               >
                 <GlobeIcon size={22} />
