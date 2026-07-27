@@ -571,7 +571,7 @@ export default function Header({
         }}
       >
         {/* Собственный бар меню той же высоты 100px, что и шапка: подпись
-            «Меню» слева, кнопка Connect справа. pr-[64px] — коридор под
+            «Меню» слева, выбор языка справа. pr-[64px] — коридор под
             крестик: он лежит на z-50 поверх оверлея, его хит-зона
             начинается в 68px от правого края, контент бара кончается
             в 88px — зазор 20px на любой ширине экрана */}
@@ -579,25 +579,21 @@ export default function Header({
           data-menu-item
           className="flex h-[100px] shrink-0 items-center justify-end gap-4 pr-[64px]"
         >
-          {/* Ниже 360px подпись уходит: иначе «Связаться» не помещается */}
+          {/* Ниже 360px подпись уходит: иначе пилюля языка не помещается */}
           <span className="fs-label mr-auto hidden font-medium min-[360px]:inline">
             {dict.nav.menu}
           </span>
 
-          {/* Фон оверлея всегда тёмный, поэтому цвет пилюли фиксированный
-              и не зависит от scrolled/darkHero, как в шапке */}
-          <Link
-            href={href(locale, "/contact")}
-            onClick={() => setMenuOpen(false)}
-            data-btn-hover
-            className="block shrink-0"
-          >
-            <Button
-              label={dict.nav.connect}
-              href={null}
-              colorClass="bg-cream text-ink"
-            />
-          </Link>
+          {/* variant="pill": вариант-точка меряет [data-header-nav],
+              который на мобильном display:none, из-за чего пилюля
+              никогда не раскрывалась. В баре места под полную ширину
+              нет, поэтому compact — только текущий язык и шеврон */}
+          <LanguageSwitcher
+            locale={locale}
+            dict={dict}
+            variant="pill"
+            compact
+          />
         </div>
 
         {/* my-auto вместо justify-center на родителе: пока места хватает,
@@ -676,23 +672,28 @@ export default function Header({
               );
             })}
 
-            {/* Connect отдельной строкой больше нет: он переехал в бар
-                меню выше. Список короче на 85px — на экране 375×667
-                шесть строк со свитчером теперь помещаются без скролла */}
+            {/* Connect отдельной строкой списка нет — он стоит пилюлей
+                под списком. Так строк на одну меньше, и на экране
+                375×667 всё помещается без скролла */}
           </ul>
         </nav>
 
-        {/* Переключатель языка — по центру под списком. variant="pill":
-            вариант-точка меряет [data-header-nav], который на мобильном
-            display:none, из-за чего пилюля никогда не раскрывалась.
-            placement="up" — панель уходит вверх, внизу экрана ей места нет */}
+        {/* Connect — по центру под списком. Фон оверлея всегда тёмный,
+            поэтому цвет пилюли фиксированный и не зависит от
+            scrolled/darkHero, как в шапке */}
         <div data-menu-item className="mt-8 flex justify-center">
-          <LanguageSwitcher
-            locale={locale}
-            dict={dict}
-            variant="pill"
-            placement="up"
-          />
+          <Link
+            href={href(locale, "/contact")}
+            onClick={() => setMenuOpen(false)}
+            data-btn-hover
+            className="block shrink-0"
+          >
+            <Button
+              label={dict.nav.connect}
+              href={null}
+              colorClass="bg-cream text-ink"
+            />
+          </Link>
         </div>
         </div>
       </div>

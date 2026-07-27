@@ -98,13 +98,17 @@ export default function LanguageSwitcher({
   dict,
   variant = "dot",
   placement = "down",
+  compact = false,
 }: {
   locale: Locale;
   dict: Dict;
   variant?: "dot" | "pill";
-  /** Куда раскрывается панель. В мобильном оверлее пилюля стоит внизу
-   *  экрана — панель обязана идти вверх, иначе она уезжает за край. */
+  /** Куда раскрывается панель. Если пилюля стоит внизу экрана —
+   *  панель обязана идти вверх, иначе она уезжает за край. */
   placement?: "down" | "up";
+  /** Узкая пилюля по ширине содержимого: только текущий язык и шеврон.
+   *  Для бара мобильного меню, где на полные 268px места нет. */
+  compact?: boolean;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -136,15 +140,16 @@ export default function LanguageSwitcher({
         gsap.set(globeRef.current, { autoAlpha: 1, scale: 1 });
         gsap.set(labelRef.current, { autoAlpha: 0, x: -10 });
         gsap.set(chevRef.current, { scale: 0, autoAlpha: 0 });
-      } else {
-        // Свёрнуто: видно текущий язык, заголовок скрыт под ним
+      } else if (!compact) {
+        // Свёрнуто: видно текущий язык, заголовок скрыт под ним.
+        // В compact второй подписи нет — перелистывать нечего
         gsap.set(pillCurrentRef.current, { autoAlpha: 1, y: 0 });
         gsap.set(pillChooseRef.current, { autoAlpha: 0, y: 10 });
       }
     }, rootRef);
 
     return () => ctx.revert();
-  }, [variant, placement]);
+  }, [variant, placement, compact]);
 
   // Раскрытие: точка растягивается в пилюлю с языком и шевроном
   // (как на референсе), следом выезжает панель, строки — каскадом
@@ -202,7 +207,7 @@ export default function LanguageSwitcher({
           });
         }
 
-        if (variant === "pill") {
+        if (variant === "pill" && !compact) {
           // Подпись перелистывается: текущий язык уходит вверх,
           // заголовок «Выберите язык» приходит снизу
           gsap.to(pillCurrentRef.current, {
@@ -276,7 +281,7 @@ export default function LanguageSwitcher({
           });
         }
 
-        if (variant === "pill") {
+        if (variant === "pill" && !compact) {
           // Подпись перелистывается обратно: заголовок уходит вниз,
           // текущий язык возвращается сверху
           gsap.to(pillChooseRef.current, {
@@ -319,7 +324,7 @@ export default function LanguageSwitcher({
     }, rootRef);
 
     return () => ctx.revert();
-  }, [open, variant, placement]);
+  }, [open, variant, placement, compact]);
 
   // Закрытие по клику снаружи и Escape
   useEffect(() => {
@@ -377,27 +382,35 @@ export default function LanguageSwitcher({
           aria-label={dict.lang.change}
           className="flex max-w-full items-center gap-2"
         >
-          {/* Две подписи стопкой — при раскрытии они перелистываются.
-              min-w-0 + max-w-full: PILL_W здесь не жёсткая ширина,
-              а максимум — на экранах уже 375px пилюля ужимается,
-              вместо того чтобы вылезать за поля */}
-          <span
-            className="relative grid h-12 min-w-0 items-center overflow-hidden rounded-full bg-white/10 px-6 text-left transition-colors duration-300 hover:bg-white/15"
-            style={{ width: PILL_W }}
-          >
-            <span
-              ref={pillCurrentRef}
-              className="fs-label absolute left-6 whitespace-nowrap font-medium text-cream"
-            >
+          {compact ? (
+            // Компакт: ширина по содержимому, одна подпись, без
+            // перелистывания — в баре меню на 268px места нет
+            <span className="fs-label grid h-12 shrink-0 items-center whitespace-nowrap rounded-full bg-white/10 px-5 font-medium text-cream transition-colors duration-300 hover:bg-white/15">
               {LOCALE_LABEL[locale]}
             </span>
+          ) : (
+            // Две подписи стопкой — при раскрытии они перелистываются.
+            // min-w-0 + max-w-full: PILL_W здесь не жёсткая ширина,
+            // а максимум — на экранах уже 375px пилюля ужимается,
+            // вместо того чтобы вылезать за поля
             <span
-              ref={pillChooseRef}
-              className="fs-label absolute left-6 whitespace-nowrap font-medium text-cream opacity-0"
+              className="relative grid h-12 min-w-0 items-center overflow-hidden rounded-full bg-white/10 px-6 text-left transition-colors duration-300 hover:bg-white/15"
+              style={{ width: PILL_W }}
             >
-              {dict.lang.choose}
+              <span
+                ref={pillCurrentRef}
+                className="fs-label absolute left-6 whitespace-nowrap font-medium text-cream"
+              >
+                {LOCALE_LABEL[locale]}
+              </span>
+              <span
+                ref={pillChooseRef}
+                className="fs-label absolute left-6 whitespace-nowrap font-medium text-cream opacity-0"
+              >
+                {dict.lang.choose}
+              </span>
             </span>
-          </span>
+          )}
           <span
             className={`grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white/10 text-cream transition-all duration-300 hover:bg-white/15 ${
               open ? "rotate-180" : ""
