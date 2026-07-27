@@ -132,18 +132,15 @@ export default function LanguageSwitcher({
   const panelRef = useRef<HTMLDivElement>(null);
   // Триггер в шапке: фирменный значок-«кубик», разворачивается 3D-flip'ом
   const cubeRef = useRef<HTMLButtonElement>(null);
-  // Внутренний под-куб, отвечающий ТОЛЬКО за цвет языка (вращение по Y).
-  // Раньше язык крутился на том же элементе, что открытие/закрытие
-  // (rotationX) — на RU кубик в покое уже стоял с rotationY:180, и клик
-  // добавлял к нему ещё rotationX:90 НА ОДНОМ И ТОМ ЖЕ элементе. Два
-  // поворота на разных осях одного transform не складываются как
-  // независимые: результат — не «грань bottom прямо перед зрителем»,
-  // а некоторый диагональный поворот куба, из-за чего треугольник на
-  // открытой грани не вставал на место. Вложенный элемент разносит
-  // оси по разным узлам: внешний cubeRef крутится только по X
-  // (открытие), внутренний langCubeRef — только по Y (язык), и они
-  // больше не комбинируются на одной матрице.
-  const langCubeRef = useRef<HTMLSpanElement>(null);
+  // Цвет языка (EN/RU) — простой кроссфейд прозрачности между двумя
+  // слоями в одной плоскости, полностью отдельно от открытия/закрытия
+  // (то у cubeRef крутится по X). Раньше это тоже была 3D-геометрия —
+  // вложенный поворот по Y — но вложенный preserve-3d ненадёжен кросс-
+  // браузерно: если он схлопывается, побеждает порядок в DOM, а не
+  // геометрия, и один язык оказывается виден всегда. Прозрачность
+  // такой проблемы не имеет в принципе.
+  const enFaceRef = useRef<HTMLSpanElement>(null);
+  const ruFaceRef = useRef<HTMLSpanElement>(null);
   // Футерная пилюля: подпись переключается с текущего языка на заголовок
   const pillCurrentRef = useRef<HTMLSpanElement>(null);
   const pillChooseRef = useRef<HTMLSpanElement>(null);
@@ -400,24 +397,33 @@ export default function LanguageSwitcher({
     setPreviewIndex(localeIndex);
   };
 
-  // Первый рендер: под-куб должен СРАЗУ стоять на грани текущего языка
-  // страницы (например, открыли /ru — сразу фиолетовая), без анимации.
-  // Все следующие смены previewIndex (колесо, сброс на mouseleave) —
-  // уже настоящий, видимый доворот. Крутим langCubeRef, а НЕ cubeRef —
-  // см. комментарий у объявления рефа.
+  // Первый рендер: сразу показать грань текущего языка страницы
+  // (например, открыли /ru — сразу чёрная), без анимации. Все следующие
+  // смены previewIndex (колесо, сброс на mouseleave) — уже видимый
+  // кроссфейд.
   const cubeMounted = useRef(false);
   useEffect(() => {
-    if (variant !== "dot" || !langCubeRef.current) return;
+    if (variant !== "dot" || !enFaceRef.current || !ruFaceRef.current) return;
+
+    const enOpacity = previewIndex === 0 ? 1 : 0;
+    const ruOpacity = previewIndex === 1 ? 1 : 0;
 
     if (!cubeMounted.current) {
-      gsap.set(langCubeRef.current, { rotationY: previewIndex * 180 });
+      gsap.set(enFaceRef.current, { opacity: enOpacity });
+      gsap.set(ruFaceRef.current, { opacity: ruOpacity });
       cubeMounted.current = true;
       return;
     }
 
-    gsap.to(langCubeRef.current, {
-      rotationY: previewIndex * 180,
-      duration: 0.5,
+    gsap.to(enFaceRef.current, {
+      opacity: enOpacity,
+      duration: 0.35,
+      ease: "power2.out",
+      overwrite: "auto",
+    });
+    gsap.to(ruFaceRef.current, {
+      opacity: ruOpacity,
+      duration: 0.35,
       ease: "power2.out",
       overwrite: "auto",
     });
@@ -594,34 +600,39 @@ export default function LanguageSwitcher({
               там сейчас показан. preserve-3d обязателен: иначе браузер
               схлопнул бы вложенный langCubeRef в плоскость */}
           <span
-            className="absolute inset-0 [transform-style:preserve-3d]"
+            className="absolute inset-0 grid place-items-center [backface-visibility:hidden]"
             style={{ transform: "translateZ(18px)" }}
           >
-            {/* Под-куб языка: крутится ТОЛЬКО по Y, полностью отдельно
-                от открытия/закрытия. Тонкий (halfZ=9 вместо 18) — ему не
-                нужна глубина всего куба, только чтобы ось прошла по центру */}
+            {/* Смена языка — обычный кроссфейд прозрачности, БЕЗ вложенного
+                поворота по Y. Раньше здесь был вложенный preserve-3d куб
+                (langCubeRef), и он был ненадёжен: если браузер не держит
+                ВЛОЖЕННЫЙ 3D-контекст (front-slot preserve-3d → внутри него
+                ещё один preserve-3d), эти грани схлопываются в плоский
+                слой, и тогда порядок отрисовки решает не 3D-глубина,
+                а порядок в DOM — RU (чёрная), идущая в разметке позже,
+                перекрывала EN (розовую) ВСЕГДА, что бы ни показывал
+                rotationY. Отсюда «квадрат всегда чёрный». Оба языка
+                теперь лежат в одной плоскости друг на друге, и виден
+                тот, у кого opacity: 1 — никакой 3D-неоднозначности */}
+            {/* Стартовая видимость — от localeIndex, а не всегда «EN
+                видим»: иначе на /ru до гидратации сервер рисовал бы
+                розовую грань, и JS уже ПОСЛЕ paint резко подменял её
+                на чёрную — короткая вспышка не того цвета */}
             <span
-              ref={langCubeRef}
-              className="absolute inset-0 [transform-style:preserve-3d]"
-              style={{ transform: "translateZ(-9px)" }}
+              ref={enFaceRef}
+              className={`absolute inset-0 grid place-items-center bg-[#FF0091] text-white ${
+                localeIndex === 0 ? "" : "opacity-0"
+              }`}
             >
-              {/* EN — фирменный розовый #FF0091, как в фавиконе вкладки */}
-              <span
-                className="absolute inset-0 grid place-items-center bg-[#FF0091] text-white [backface-visibility:hidden]"
-                style={{ transform: "translateZ(9px)" }}
-              >
-                <GlobeIcon size={22} />
-              </span>
-
-              {/* RU — та же грань, развёрнутая на 180° по Y. Доворот
-                  колёсиком с 0 до 180° показывает именно её.
-                  Чёрная #000000, а не фиолетовая — по прямому запросу */}
-              <span
-                className="absolute inset-0 grid place-items-center bg-black text-white [backface-visibility:hidden]"
-                style={{ transform: "rotateY(180deg) translateZ(9px)" }}
-              >
-                <GlobeIcon size={22} />
-              </span>
+              <GlobeIcon size={22} />
+            </span>
+            <span
+              ref={ruFaceRef}
+              className={`absolute inset-0 grid place-items-center bg-black text-white ${
+                localeIndex === 0 ? "opacity-0" : ""
+              }`}
+            >
+              <GlobeIcon size={22} />
             </span>
           </span>
 
