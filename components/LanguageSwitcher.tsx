@@ -41,6 +41,16 @@ function Chevron() {
   );
 }
 
+/** Залитый треугольник вниз — на открытой грани куба, крупнее и весомее
+ *  тонкого штрихового шеврона. */
+function TriangleDown({ size = 22 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M3 6h18L12 20 3 6z" />
+    </svg>
+  );
+}
+
 /**
  * Панель выбора языка: только названия, без флагов и подписей статуса.
  * Активный язык выделен насыщенностью.
@@ -412,12 +422,14 @@ export default function LanguageSwitcher({
           />
 
           {/* bottom — открыто: доворот на 90° приводит именно её лицом
-              к зрителю (см. комментарий у анимации открытия) */}
+              к зрителю (см. комментарий у анимации открытия). Крупный
+              залитый треугольник вниз вместо шеврона — фирменный розовый
+              на тёмной грани */}
           <span
-            className="absolute inset-0 grid place-items-center bg-[#2d2d2d] text-white [backface-visibility:hidden]"
+            className="absolute inset-0 grid place-items-center bg-[#2d2d2d] text-blush [backface-visibility:hidden]"
             style={{ transform: "rotateX(-90deg) translateZ(22px)" }}
           >
-            <Chevron />
+            <TriangleDown size={26} />
           </span>
         </button>
       </div>
