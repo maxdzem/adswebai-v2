@@ -346,6 +346,93 @@ export default function LanguageSwitcher({
     router.push(swapLocale(pathname, code));
   };
 
+  // Колёсико над кубом (только dot-вариант, только настоящая мышь —
+  // у тача и клавиатуры нет wheel-события, поэтому клик по кубу
+  // по-прежнему открывает обычную панель, это основной путь).
+  // Крутим по Y: каждый «щелчок» колеса переключает грань на другой
+  // язык, у грани — свой цвет (розовый EN / фиолетовый RU). Пока
+  // языков всего два, поворот — простой тумблер 0↔180°; больше двух
+  // потребует настоящей карусели граней.
+  const localeIndex = Math.max(0, LOCALES.indexOf(locale));
+  const [previewIndex, setPreviewIndex] = useState(localeIndex);
+  const hasPendingChange = previewIndex !== localeIndex;
+  const wheelAccum = useRef(0);
+  const cubeWrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = cubeWrapRef.current;
+    if (!el || variant !== "dot") return;
+
+    const onWheel = (e: WheelEvent) => {
+      // preventDefault нужен, чтобы колесо над крошечным 36px-значком не
+      // прокручивало страницу под курсором — React-овский onWheel это
+      // делает в пассивном режиме и preventDefault там просто не сработает
+      e.preventDefault();
+      wheelAccum.current += e.deltaY;
+
+      const STEP = 50;
+      if (Math.abs(wheelAccum.current) < STEP) return;
+      const dir = wheelAccum.current > 0 ? 1 : -1;
+      wheelAccum.current = 0;
+
+      setPreviewIndex((i) => (i + dir + LOCALES.length) % LOCALES.length);
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [variant]);
+
+  // Отвели мышь, не кликнув, — превью сбрасывается на реальный язык
+  const resetPreview = () => {
+    wheelAccum.current = 0;
+    setPreviewIndex(localeIndex);
+  };
+
+  // Первый рендер: куб должен СРАЗУ стоять на грани текущего языка
+  // страницы (например, открыли /ru — сразу фиолетовая), без анимации.
+  // Doеё все следующие смены previewIndex (колесо, сброс на mouseleave)
+  // — уже настоящий, видимый доворот.
+  const cubeMounted = useRef(false);
+  useEffect(() => {
+    if (variant !== "dot" || !cubeRef.current) return;
+
+    if (!cubeMounted.current) {
+      gsap.set(cubeRef.current, { rotationY: previewIndex * 180 });
+      cubeMounted.current = true;
+      return;
+    }
+
+    gsap.to(cubeRef.current, {
+      rotationY: previewIndex * 180,
+      duration: 0.5,
+      ease: "power2.out",
+      overwrite: "auto",
+    });
+  }, [previewIndex, variant]);
+
+  // Пульсирующее кольцо-подсказка: пока выбор не подтверждён кликом
+  useEffect(() => {
+    if (variant !== "dot" || !cubeWrapRef.current) return;
+    const ring = cubeWrapRef.current.querySelector<HTMLElement>(
+      "[data-confirm-ring]"
+    );
+    if (!ring) return;
+
+    if (hasPendingChange) {
+      const tl = gsap.to(ring, {
+        scale: 1.35,
+        autoAlpha: 0,
+        duration: 0.9,
+        ease: "power1.out",
+        repeat: -1,
+      });
+      return () => {
+        tl.kill();
+        gsap.set(ring, { autoAlpha: 0, scale: 1 });
+      };
+    }
+  }, [hasPendingChange, variant]);
+
   // Скругление и overflow — отдельными классами на каждый вариант:
   // у кубика (dot) панель прямоугольная и с внутренним скроллом (её
   // высота зажата между верхом значка и чёрной линией низа шапки),
@@ -448,22 +535,60 @@ export default function LanguageSwitcher({
           участвуют в единственном используемом повороте 0↔90°, но делают
           коробку настоящей, а не бутафорской с одной стороной */}
       <div
+        ref={cubeWrapRef}
+        onMouseLeave={resetPreview}
         className="absolute left-0 top-1/2 z-10 h-9 w-9 shrink-0 -translate-y-1/2"
         style={{ perspective: 600 }}
       >
+        {/* Кольцо-подсказка «нажмите, чтобы подтвердить»: пульсирует,
+            пока превью (выбранное колёсиком) отличается от реального
+            языка страницы. Живёт вне preserve-3d кнопки — иначе
+            вращение куба крутило бы и его тоже */}
+        <span
+          data-confirm-ring
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-[2px] opacity-0"
+          style={{ boxShadow: "0 0 0 2px var(--color-blush)" }}
+        />
+
         <button
           ref={cubeRef}
           type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-label={open ? dict.lang.close : dict.lang.change}
+          onClick={() => {
+            if (hasPendingChange) {
+              // Колёсиком уже выбрали другой язык — клик подтверждает
+              // его и переходит, вместо того чтобы открывать список
+              pick(LOCALES[previewIndex]);
+            } else {
+              setOpen((v) => !v);
+            }
+          }}
+          aria-label={
+            hasPendingChange
+              ? `${LOCALE_LABEL[LOCALES[previewIndex]]} — ${dict.lang.change}`
+              : open
+                ? dict.lang.close
+                : dict.lang.change
+          }
           aria-expanded={open}
           className="relative block h-9 w-9 outline-none [transform-style:preserve-3d] focus-visible:ring-2 focus-visible:ring-cream/60"
           style={{ transform: "translateZ(-18px)" }}
         >
-          {/* front — закрыто: символ языка белым по розовому, без круга */}
+          {/* front — EN, закрыто: символ языка белым по розовому, без круга */}
           <span
             className="absolute inset-0 grid place-items-center bg-blush text-white [backface-visibility:hidden]"
             style={{ transform: "translateZ(18px)" }}
+          >
+            <GlobeIcon size={22} />
+          </span>
+
+          {/* langB — RU: та же грань, что front, но развёрнутая на 180°
+              по Y (не по X, эта ось занята open/close). Доворот кубика
+              колёсиком с 0 до 180° показывает именно её — фиолетовый
+              вместо розового сигналит смену языка ещё до подтверждения */}
+          <span
+            className="absolute inset-0 grid place-items-center bg-grape text-white [backface-visibility:hidden]"
+            style={{ transform: "rotateY(180deg) translateZ(18px)" }}
           >
             <GlobeIcon size={22} />
           </span>
