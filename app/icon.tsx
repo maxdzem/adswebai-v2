@@ -11,6 +11,11 @@ import { ImageResponse } from "next/og";
  * Рисунок: фирменный розовый квадрат #FF0091 (острые углы, без
  * borderRadius — тот же язык формы, что у кубика-переключателя в шапке)
  * с чёрным #000000 треугольником вершиной вниз поверх.
+ *
+ * Треугольник — через clip-path: polygon(...) на залитом чёрном блоке.
+ * Раньше был приём border-top/left/right (width:0;height:0), но в Satori
+ * (движок ImageResponse) он рендерится сплошным прямоугольником — вместо
+ * треугольника вершиной вниз получался просто чёрный квадрат.
  */
 
 export const size = { width: 64, height: 64 };
@@ -29,16 +34,13 @@ export default function Icon() {
           background: "#FF0091",
         }}
       >
-        {/* Треугольник вершиной вниз — через CSS-бордеры: border-top
-            вместо border-bottom переворачивает его.
-            ImageResponse не поддерживает clip-path */}
+        {/* Треугольник вершиной вниз: три точки полигона, нижняя — по центру */}
         <div
           style={{
-            width: 0,
-            height: 0,
-            borderLeft: "17px solid transparent",
-            borderRight: "17px solid transparent",
-            borderTop: "30px solid #000000",
+            width: 34,
+            height: 30,
+            background: "#000000",
+            clipPath: "polygon(0% 0%, 100% 0%, 50% 100%)",
           }}
         />
       </div>
