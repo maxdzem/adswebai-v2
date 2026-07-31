@@ -1,0 +1,319 @@
+/* ─────────────────────────────────────────────────────────────────────
+   Дизайн-система порта главной hugeinc.com (вкладка Technology Services).
+
+   Снята с зеркала C:\Hugenic2\https___www.hugeinc.com_ — из
+   _next/static/css/32d3ab2637a86df4.css. Здесь только то, что нельзя
+   выразить утилитами Tailwind: собственный шрифт, типографическая
+   шкала с двумя брейкпоинтами и 20-колоночная сетка.
+
+   Брейкпоинты у Huge совпадают с дефолтными у Tailwind:
+   md = 768px, xl = 1280px — поэтому в разметке рядом с этими классами
+   спокойно живут `md:` и `xl:`.
+
+   Классы намеренно оставлены с исходными именами (t__*, v2__*): по ним
+   удобно сверяться с оригиналом, а с классами проекта (fs-*, type-*)
+   они не пересекаются.
+   ───────────────────────────────────────────────────────────────────── */
+
+/* Monument Grotesk — из зеркала, два начертания (400 и 500).
+   Больше в сборке Huge и не было: жирнее 500 сайт не использует. */
+@font-face {
+  font-family: "Monument Grotesk";
+  src: url("/fonts/monument-grotesk-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Monument Grotesk";
+  src: url("/fonts/monument-grotesk-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Корень порта. Внутри него — своя гарнитура и свой чёрный фон;
+   остальной сайт (cream/ink) этим не задет. */
+.huge-root {
+  font-family: "Monument Grotesk", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: normal;
+}
+
+.huge-root h1,
+.huge-root h2,
+.huge-root h3,
+.huge-root h4,
+.huge-root p,
+.huge-root ul,
+.huge-root ol {
+  font-weight: 400;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Типографическая шкала ─────────────────────────────────────────── */
+
+.t__display {
+  font-size: 180px;
+  line-height: 180px;
+  letter-spacing: -0.03em;
+}
+.t__mega {
+  /* На узких экранах Huge держит заголовок на vw с потолком 82px */
+  font-size: clamp(0px, 19.07vw, 82px);
+  line-height: clamp(0px, 17.74vw, 72px);
+  letter-spacing: -0.03em;
+}
+.t__xxl {
+  font-size: 56px;
+  line-height: 56px;
+  letter-spacing: -0.03em;
+}
+.t__xl {
+  font-size: 40px;
+  line-height: 40px;
+  letter-spacing: -0.03em;
+}
+.t__l {
+  font-size: 32px;
+  line-height: 32px;
+  letter-spacing: -0.03em;
+}
+.t__l-v2 {
+  font-size: 28px;
+  line-height: 28px;
+  letter-spacing: -0.03em;
+}
+.t__solid {
+  font-size: 25px;
+  line-height: 32px;
+  letter-spacing: -0.03em;
+}
+.t__regular {
+  font-size: 20px;
+  line-height: 24px;
+  letter-spacing: -0.03em;
+}
+.t__subtitle {
+  font-size: 18px;
+  line-height: 24px;
+  letter-spacing: -0.03em;
+  font-weight: 500;
+}
+.t__body {
+  font-size: 18px;
+  line-height: 24px;
+  letter-spacing: -0.03em;
+}
+.t__caption {
+  font-size: 14px;
+  line-height: 16px;
+  letter-spacing: -0.03em;
+}
+
+@media (min-width: 768px) {
+  .t__display {
+    font-size: 200px;
+    line-height: 200px;
+  }
+  .t__mega {
+    font-size: 112px;
+    line-height: 104px;
+  }
+  .t__xxl {
+    font-size: 72px;
+    line-height: 72px;
+  }
+  .t__xl {
+    font-size: 56px;
+    line-height: 56px;
+  }
+  .t__l {
+    font-size: 36px;
+    line-height: 40px;
+  }
+  .t__l-v2 {
+    font-size: 32px;
+    line-height: 36px;
+  }
+  .t__solid {
+    font-size: 29px;
+    line-height: 32px;
+  }
+  .t__regular {
+    font-size: 25px;
+    line-height: 32px;
+  }
+  .t__body {
+    font-size: 19px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .t__display {
+    font-size: 320px;
+    line-height: 320px;
+  }
+  .t__mega {
+    font-size: 160px;
+    line-height: 160px;
+  }
+  .t__xxl {
+    font-size: 112px;
+    line-height: 112px;
+  }
+  .t__xl {
+    font-size: 72px;
+    line-height: 72px;
+  }
+  .t__l {
+    font-size: 52px;
+    line-height: 48px;
+  }
+  .t__l-v2 {
+    font-size: 48px;
+    line-height: 42px;
+  }
+  .t__solid {
+    font-size: 40px;
+    line-height: 40px;
+  }
+  .t__regular {
+    font-size: 28px;
+  }
+  .t__subtitle {
+    font-size: 20px;
+  }
+  .t__body {
+    font-size: 20px;
+  }
+}
+
+/* ── Сетка ─────────────────────────────────────────────────────────────
+   4 колонки на телефоне, 8 на планшете, 20 на десктопе. Именно из-за
+   двадцати колонок в разметке встречаются col-start-13 и col-span-14. */
+
+.v2__grid,
+.v2__subgrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 24px;
+}
+.v2__grid {
+  padding-left: 24px;
+  padding-right: 24px;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 100%;
+}
+.v2__grid__padding {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+.v2__grid__column-gap {
+  column-gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .v2__grid,
+  .v2__subgrid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+  .v2__grid,
+  .v2__grid__padding {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .v2__grid,
+  .v2__subgrid {
+    grid-template-columns: repeat(20, minmax(0, 1fr));
+  }
+}
+
+/* ── Ссылка с «убегающим» подчёркиванием ───────────────────────────────
+   У Huge подчёркивание есть по умолчанию и УХОДИТ под курсором
+   (scaleX 1 → 0). Вариант --reveal — наоборот, появляется. */
+
+.v2__link {
+  position: relative;
+}
+.v2__link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0.2em;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(1);
+  transform-origin: bottom left;
+  transition: transform 0.25s ease-out;
+}
+.v2__link:hover::after,
+.v2__link--reveal::after {
+  transform: scaleX(0);
+}
+.v2__link--reveal:hover::after {
+  transform: scaleX(1);
+}
+
+/* ── 3D-кнопка («Let's talk», «Explore», «Read.») ──────────────────────
+   Куб высотой в кнопку: четыре грани, при наведении провёртывается
+   на 90° вокруг X. Ровно та же механика, что в styles_button у Huge. */
+
+.huge-btn {
+  --button-height: 56px;
+  --button-rotation: 0deg;
+  perspective: 800px;
+}
+.huge-btn__faces {
+  pointer-events: none;
+  transform: translateZ(calc(var(--button-height) / 2 * -1))
+    rotateX(var(--button-rotation));
+  transform-style: preserve-3d;
+  transition: transform 0.4s ease-out;
+}
+.huge-btn__front {
+  transform: translateZ(calc(var(--button-height) / 2));
+}
+.huge-btn__top {
+  transform: rotateX(90deg) translateZ(calc(var(--button-height) / 2));
+}
+.huge-btn__back {
+  transform: rotateX(-180deg) translateZ(calc(var(--button-height) / 2));
+}
+.huge-btn__bottom {
+  transform: rotateX(-90deg) translateZ(calc(var(--button-height) / 2));
+}
+@media (width > 768px) {
+  .huge-btn {
+    --button-height: 64px;
+  }
+}
+@media (hover: hover) {
+  .huge-btn:hover .huge-btn__faces {
+    transform: translateZ(calc(var(--button-height) / 2 * -1))
+      rotateX(calc(var(--button-rotation) + 90deg));
+  }
+}
+
+/* ── Куб с логотипами клиентов (секция Ideas) ──────────────────────────
+   У Huge это WebGL-канвас на three.js. Здесь — CSS-куб с теми же шестью
+   текстурами: тот же смысл (медленно вращающийся куб, на гранях клиенты),
+   без лишней зависимости в 600КБ. Вращение крутит скролл — см. SectionIdeas. */
+
+.huge-cube {
+  transform-style: preserve-3d;
+  transform: rotateX(var(--cube-rx, -20deg)) rotateY(var(--cube-ry, 0deg));
+}
+.huge-cube__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  background-size: cover;
+  background-position: center;
+}

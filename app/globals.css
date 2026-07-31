@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* Дизайн-система порта главной hugeinc.com — живёт только внутри
+   .huge-root на вкладке Technology Services. */
+@import "./huge.css";
 
 @theme inline {
   /* Токены референса: --themed-background / --themed-foreground */
@@ -6,6 +9,15 @@
   --color-ink: #2d2d2d;
   --color-blush: #feafe6;
   --color-grape: #4f2be8;
+  /* Палитра Huge — снята с зеркала (bg-huge-* в их CSS). Нужна утилитами
+     Tailwind, потому что в разметке порта она стоит на каждом втором узле. */
+  --color-huge-black: #000000;
+  --color-huge-white: #ffffff;
+  --color-huge-magenta: #ff0090;
+  --color-huge-green: #48ff65;
+  --color-huge-graytext: #999999;
+  --color-huge-border: #424a53;
+  --color-huge-footnote: #c5cfd9;
   /* Фон контентной части внутренних страниц. Заметно темнее cream,
      чтобы медиа-блоки и текст читались как слой поверх фона. */
   --color-mist: #d6d4d0;

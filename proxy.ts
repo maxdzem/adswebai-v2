@@ -58,7 +58,12 @@ export const config = {
   // БЕЗ расширения (/icon?hash), поэтому фильтр по расширениям их не
   // ловил — запрос уходил в редирект на /en/icon, которого нет, и
   // фавиконка не отдавалась совсем. Их нужно исключать по имени.
+  //
+  // Шрифты (woff2 и компания) — тоже статика из /public. Пока их не было
+  // в списке, @font-face с путём /fonts/x.woff2 редиректился на
+  // /en/fonts/x.woff2, которого нет: браузер получал 404 и молча
+  // подставлял системную гарнитуру.
   matcher: [
-    "/((?!_next|api|icon|apple-icon|opengraph-image|twitter-image|manifest|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:mp4|webm|jpg|jpeg|png|gif|svg|webp|avif|ico|txt|xml)).*)",
+    "/((?!_next|api|icon|apple-icon|opengraph-image|twitter-image|manifest|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:mp4|webm|jpg|jpeg|png|gif|svg|webp|avif|ico|txt|xml|woff|woff2|ttf|otf|eot)).*)",
   ],
 };
