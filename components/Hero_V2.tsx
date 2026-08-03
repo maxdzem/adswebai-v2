@@ -36,7 +36,7 @@ gsap.registerPlugin(useGSAP, ScrollTrigger);
  */
 export default function Hero_V2({
   dict,
-  videoSrc = "/AdsWebAI-Sizzle_1280x720.mp4",
+  videoSrc = "/AdsWebAI-Sizzle_1280x720x2.mp4",
 }: {
   dict: Dict;
   /** Заглушка под фон: подменяется на любой ролик без правок компонента. */
