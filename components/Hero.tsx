@@ -62,7 +62,7 @@ export default function Hero({ dict }: { dict: Dict }) {
     // когда она нужна
     <section id="hero" ref={ref} className="relative h-[100svh] overflow-hidden bg-ink">
       <LazyVideo
-        src="/Monks-Sizzle_1280x720.mp4"
+        src="/AdsWebAI-Sizzle_1280x720.mp4"
         eager
         className="absolute inset-0 h-full w-full object-cover"
       />

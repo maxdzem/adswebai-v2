@@ -147,7 +147,7 @@ export default function AnimatedCircle({ dict }: { dict: Dict }) {
                 >
                   <LazyVideo
                     ref={videoRef}
-                    src="/face-video.mp4"
+                    src="/AdsWebAI-Sizzle_1280x720x2.mp4"
                     className="h-full w-full object-cover"
                     onPlayingChange={setPlaying}
                   />

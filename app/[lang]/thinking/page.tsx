@@ -8,6 +8,7 @@ import Link from "next/link";
 import MediaSlot from "@/components/MediaSlot";
 import Button from "@/components/Button";
 import { FxUp, FxSide, FxDrift } from "@/components/Fx";
+import { photo } from "@/content/media";
 
 type Props = { params: Promise<{ lang: string }> };
 
@@ -70,7 +71,7 @@ export default async function ThinkingPage({ params }: Props) {
 
         {/* Слот под ведущий материал */}
         <FxDrift to="left" amount={5}>
-          <MediaSlot ratio="21/9" className="mt-16" />
+          <MediaSlot ratio="21/9" className="mt-16" src={photo(12)} />
         </FxDrift>
 
         <div className="px-6 lg:px-10">
@@ -113,7 +114,7 @@ export default async function ThinkingPage({ params }: Props) {
                     delay={(i % 3) * 0.06}
                     className={i % 3 === 1 ? "lg:mt-12" : ""}
                   >
-                    <MediaSlot ratio={r} />
+                    <MediaSlot ratio={r} src={photo(13 + i)} />
                   </FxSide>
                 ))}
               </div>

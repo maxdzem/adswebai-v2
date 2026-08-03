@@ -4,9 +4,11 @@
  * Пока ролика нет, рендерится ровно то, что нужно: чистый серый блок
  * нужных пропорций, держащий вёрстку. Реального контента не имитирует.
  *
- * Как вставить ролик: положить файл в /public и передать `src`:
+ * Как вставить медиа: положить файл в /public и передать `src`:
  *     <MediaSlot ratio="21/9" src="/media/my-clip.mp4" />
- * Тот же слот сразу станет видео — трогать вёрстку не нужно.
+ *     <MediaSlot ratio="4/3" src="/media/photo.jpg" alt="Съёмка студии" />
+ * Тот же слот сразу станет видео или фото — трогать вёрстку не нужно.
+ * Что именно рисовать, определяется по расширению файла в `src`.
  *
  * Серверный компонент: без анимаций и стейта, уезжает в HTML целиком.
  */
@@ -20,35 +22,54 @@ const RATIO: Record<string, string> = {
   "1/1": "aspect-square",
 };
 
+/** Расширения, которые кладём в <img>; всё остальное считаем видео. */
+const IMAGE_EXT = /\.(jpe?g|png|webp|avif|gif|svg)(\?|#|$)/i;
+
 export default function MediaSlot({
   ratio = "16/9",
   src,
   className = "",
   /** Мелкая пометка в углу: видно, какой формат ждёт слот. */
   note,
+  /** Подпись для фото. Пустая строка = картинка декоративная. */
+  alt = "",
 }: {
   ratio?: keyof typeof RATIO | (string & {});
   src?: string;
   className?: string;
   note?: string;
+  alt?: string;
 }) {
   const aspect = RATIO[ratio] ?? RATIO["16/9"];
+  const isImage = !!src && IMAGE_EXT.test(src);
 
   return (
     <div
       className={`relative overflow-hidden rounded-[4px] bg-ink/[0.09] ${aspect} ${className}`}
     >
       {src ? (
-        <video
-          className="h-full w-full object-cover"
-          src={src}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          aria-hidden
-        />
+        isImage ? (
+          // Обычный <img>, а не next/image: слот уже задаёт размер через
+          // aspect-ratio, а часть картинок лежит на чужом CDN.
+          <img
+            className="h-full w-full object-cover"
+            src={src}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <video
+            className="h-full w-full object-cover"
+            src={src}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            aria-hidden
+          />
+        )
       ) : (
         // Пустой слот: тонкая внутренняя рамка + едва заметная пометка
         // формата. Ничего лишнего — просто серая зона.

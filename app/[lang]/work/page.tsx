@@ -7,6 +7,7 @@ import { SITE_NAME } from "@/content/site";
 import Link from "next/link";
 import MediaSlot from "@/components/MediaSlot";
 import { FxUp, FxSide, FxDrift } from "@/components/Fx";
+import { photo } from "@/content/media";
 
 type Props = { params: Promise<{ lang: string }> };
 
@@ -31,9 +32,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * Галерея кейсов. Реальных кейсов пока нет — вместо выдуманных клиентов
- * и метрик стоит сетка пустых слотов разных пропорций: ролик кладётся
- * в /public и передаётся в src нужного слота, вёрстка при этом не меняется.
+ * Галерея кейсов. Клиенты и метрики намеренно не подписаны — в слотах стоят
+ * кадры из общего пула (content/media.ts), они работают как визуальный фон,
+ * а не как заявление о конкретных проектах. Когда появятся свои съёмки,
+ * достаточно заменить пути в пуле.
  *
  * Сетка нарочно разноразмерная и со сдвигами по вертикали — раздел
  * читается как галерея, а не как таблица.
@@ -75,7 +77,7 @@ export default async function WorkPage({ params }: Props) {
 
         {/* Широкий слот-открывашка на всю ширину */}
         <FxDrift to="left" amount={5}>
-          <MediaSlot ratio="21/9" className="mt-16" />
+          <MediaSlot ratio="21/9" className="mt-16" src={photo(0)} />
         </FxDrift>
 
         <div className="px-6 lg:px-10">
@@ -100,7 +102,7 @@ export default async function WorkPage({ params }: Props) {
                 side={i % 2 === 0 ? "left" : "right"}
                 className={`${s.span} ${s.offset ?? ""}`}
               >
-                <MediaSlot ratio={s.ratio} />
+                <MediaSlot ratio={s.ratio} src={photo(i + 1)} />
               </FxSide>
             ))}
           </div>

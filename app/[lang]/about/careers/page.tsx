@@ -8,6 +8,7 @@ import { getCareers } from "@/content/pages";
 import Link from "next/link";
 import MediaSlot from "@/components/MediaSlot";
 import { FxUp, FxSide } from "@/components/Fx";
+import { photo } from "@/content/media";
 
 type Props = { params: Promise<{ lang: string }> };
 
@@ -75,8 +76,8 @@ export default async function CareersPage({ params }: Props) {
           </FxUp>
 
           <FxSide side="right" className="mt-12 lg:mt-0 lg:w-[34%] lg:shrink-0">
-            <MediaSlot ratio="4/3" />
-            <MediaSlot ratio="1/1" className="mt-6" />
+            <MediaSlot ratio="4/3" src={photo(22)} />
+            <MediaSlot ratio="1/1" className="mt-6" src={photo(23)} />
           </FxSide>
         </section>
 

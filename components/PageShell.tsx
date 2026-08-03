@@ -7,6 +7,7 @@ import Footer from "./Footer";
 import type { ContentPage } from "@/content/site";
 import { href, type Locale } from "@/content/i18n";
 import type { Dict } from "@/content/dict";
+import { photo } from "@/content/media";
 
 /**
  * Каркас внутренней страницы. Четыре макета, чтобы разделы не выглядели
@@ -97,7 +98,7 @@ function FeatureBody({ page }: { page: ContentPage }) {
     <>
       {/* Полноширинный слот: по мере скролла плавно уходит влево */}
       <FxDrift to="left" amount={6}>
-        <MediaSlot ratio="21/9" className="mt-16" />
+        <MediaSlot ratio="21/9" className="mt-16" src={photo(1)} />
       </FxDrift>
 
       <div className="mt-28 lg:ml-[12%]">
@@ -114,7 +115,7 @@ function FeatureBody({ page }: { page: ContentPage }) {
 
             {i === 1 && (
               <FxSide side="right">
-                <MediaSlot ratio="16/9" className="mt-12" />
+                <MediaSlot ratio="16/9" className="mt-12" src={photo(2)} />
               </FxSide>
             )}
           </section>
@@ -151,7 +152,7 @@ function CompactBody({ page }: { page: ContentPage }) {
 
             {i === 0 && (
               <FxSide side="right">
-                <MediaSlot ratio="16/9" className="mt-10" />
+                <MediaSlot ratio="16/9" className="mt-10" src={photo(11)} />
               </FxSide>
             )}
           </div>
@@ -193,7 +194,7 @@ function EditorialBody({ page }: { page: ContentPage }) {
         </div>
 
         <FxSide side="right" className="lg:w-[30%] lg:shrink-0">
-          <MediaSlot ratio="3/4" className="lg:sticky lg:top-[130px]" />
+          <MediaSlot ratio="3/4" className="lg:sticky lg:top-[130px]" src={photo(16)} />
         </FxSide>
       </div>
     </div>
@@ -240,7 +241,7 @@ function TechnicalBody({ page }: { page: ContentPage }) {
 
       {/* Широкий слот после тёмной полосы — визуальная пауза */}
       <FxDrift to="right" amount={5}>
-        <MediaSlot ratio="21/9" className="mt-20" />
+        <MediaSlot ratio="21/9" className="mt-20" src={photo(21)} />
       </FxDrift>
     </>
   );

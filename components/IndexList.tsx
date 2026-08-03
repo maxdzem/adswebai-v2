@@ -6,6 +6,7 @@ import Footer from "./Footer";
 import type { ContentPage } from "@/content/site";
 import { href as L, type Locale } from "@/content/i18n";
 import type { Dict } from "@/content/dict";
+import { photo } from "@/content/media";
 
 /**
  * Страница-указатель раздела. Два представления, чтобы /solutions
@@ -65,7 +66,7 @@ export default function IndexList({
           <>
             {/* Широкий слот на всю ширину — уходит влево по мере скролла */}
             <FxDrift to="left" amount={6}>
-              <MediaSlot ratio="21/9" className="mt-16" />
+              <MediaSlot ratio="21/9" className="mt-16" src={photo(6)} />
             </FxDrift>
 
             <div className="px-6 lg:px-10">
@@ -78,7 +79,7 @@ export default function IndexList({
                         href={L(locale, `${base}/${p.slug}`)}
                         className="group block transition-opacity hover:opacity-70"
                       >
-                        <MediaSlot ratio="4/3" />
+                        <MediaSlot ratio="4/3" src={photo(7 + i)} />
                         <span className="fs-label mt-5 block font-medium text-ink/40">
                           {String(i + 1).padStart(2, "0")}
                         </span>

@@ -10,6 +10,7 @@ import Button from "@/components/Button";
 import SwapLink from "@/components/SwapLink";
 import { FxUp, FxSide, FxDrift } from "@/components/Fx";
 import { getSolutions, getServices } from "@/content/resolve";
+import { photo } from "@/content/media";
 
 type Props = { params: Promise<{ lang: string }> };
 
@@ -64,7 +65,7 @@ export default async function WhatWeDoPage({ params }: Props) {
         </div>
 
         <FxDrift to="left" amount={5}>
-          <MediaSlot ratio="21/9" className="mt-16" />
+          <MediaSlot ratio="21/9" className="mt-16" src={photo(3)} />
         </FxDrift>
 
         {/* Ветка 1 — решения, крупными карточками */}
@@ -85,7 +86,7 @@ export default async function WhatWeDoPage({ params }: Props) {
                       data-btn-hover
                       className="group block"
                     >
-                      <MediaSlot ratio="4/3" />
+                      <MediaSlot ratio="4/3" src={photo(4 + i)} />
                       <h3 className="fs-body-m mt-6 font-bold leading-[1.15]">
                         <SwapLink label={p.title} href={null} size={32} iconSize={12} />
                       </h3>
@@ -162,7 +163,7 @@ export default async function WhatWeDoPage({ params }: Props) {
             </FxUp>
 
             <FxSide side="right" className="mt-12 lg:mt-0 lg:w-[38%] lg:shrink-0">
-              <MediaSlot ratio="1/1" />
+              <MediaSlot ratio="1/1" src={photo(17)} />
             </FxSide>
           </section>
         </div>

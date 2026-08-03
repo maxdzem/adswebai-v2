@@ -8,6 +8,7 @@ import Link from "next/link";
 import MediaSlot from "@/components/MediaSlot";
 import Button from "@/components/Button";
 import { FxUp, FxSide } from "@/components/Fx";
+import { photo } from "@/content/media";
 
 type Props = { params: Promise<{ lang: string }> };
 
@@ -63,7 +64,7 @@ export default async function PartnersPage({ params }: Props) {
         <div className="mt-20 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:ml-[12%] lg:grid-cols-6">
           {Array.from({ length: 12 }).map((_, i) => (
             <FxUp key={i} delay={(i % 6) * 0.05}>
-              <MediaSlot ratio="4/3" note="Logo" />
+              <MediaSlot ratio="4/3" src={photo(i)} />
             </FxUp>
           ))}
         </div>
@@ -108,7 +109,7 @@ export default async function PartnersPage({ params }: Props) {
           </FxUp>
 
           <FxSide side="right" className="mt-12 lg:mt-0 lg:w-[34%] lg:shrink-0">
-            <MediaSlot ratio="3/4" />
+            <MediaSlot ratio="3/4" src={photo(19)} />
           </FxSide>
         </section>
       </div>

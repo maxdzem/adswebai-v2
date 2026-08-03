@@ -8,6 +8,7 @@ import { getNewsroom } from "@/content/pages";
 import Link from "next/link";
 import MediaSlot from "@/components/MediaSlot";
 import { FxUp } from "@/components/Fx";
+import { photo } from "@/content/media";
 
 type Props = { params: Promise<{ lang: string }> };
 
@@ -79,12 +80,12 @@ export default async function NewsroomPage({ params }: Props) {
 
               {/* Слоты под будущие материалы: первый крупный, дальше сетка */}
               <FxUp delay={0.08} className="mt-12">
-                <MediaSlot ratio="21/9" />
+                <MediaSlot ratio="21/9" src={photo(8)} />
               </FxUp>
               <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
                 {["16/9", "16/9", "16/9"].map((r, i) => (
                   <FxUp key={i} delay={i * 0.06}>
-                    <MediaSlot ratio={r} />
+                    <MediaSlot ratio={r} src={photo(9 + i)} />
                   </FxUp>
                 ))}
               </div>
