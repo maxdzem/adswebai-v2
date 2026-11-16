@@ -40,6 +40,11 @@ const LazyVideo = forwardRef<
 
     const load = () => {
       if (!el.dataset.loaded) {
+        // С preload="none" браузер после подстановки src не тянет даже
+        // первый кадр. При «Уменьшении движения» play() не вызывается —
+        // и на месте ролика оставалась пустота. metadata хватает, чтобы
+        // показать первый кадр как постер.
+        el.preload = "metadata";
         el.src = src;
         el.dataset.loaded = "1";
       }

@@ -112,16 +112,19 @@ export default function Footer({ locale, dict }: { locale: Locale; dict: Dict })
   return (
     // Фон футера — #191715 (глубже основного ink, как в референсе)
     <footer className="bg-[#191715] px-6 pb-10 pt-16 text-cream lg:px-10">
-      <div className="grid grid-cols-1 gap-16 lg:grid-cols-12">
-        <p className="fs-label text-white/60 lg:col-span-1">
+      {/* Сетка без сантиметровых отступов. Раньше колонки сдвигались
+          ml-[4.5cm] / ml-[10.5cm] при gap 64px: на экранах MacBook
+          (1440–1512px) колонка документов сжималась до ~250px, а пилюля
+          языка (324px) не влезала в свои ~237px и наезжала на ссылки.
+          Теперь: lg — три колонки + язык отдельной строкой, xl — четыре. */}
+      <div className="grid grid-cols-1 gap-16 lg:grid-cols-12 lg:gap-x-8">
+        <p className="fs-label text-white/60 lg:col-span-2">
           {dict.footer.keepExploring}
         </p>
 
-        {/* ml-[4.5cm]: крупные ссылки отодвинуты от левого края —
-            заодно точка-маркер (-left-6) перестаёт упираться в границу */}
         {/* pl-6 на мобильном — место для точки-маркера (-left-6):
             без него она вылезала ровно на левый край экрана */}
-        <nav className="pl-6 lg:col-span-3 lg:ml-[4.5cm] lg:pl-0">
+        <nav className="pl-6 lg:col-span-4 lg:pl-0">
           {BIG_LINKS.map((l) => (
             // Как пункты шапки: точка «падает» слева, слово подпрыгивает
             // (те же кейфреймы dot-in/dot-out/label-bounce из globals.css)
@@ -139,11 +142,7 @@ export default function Footer({ locale, dict }: { locale: Locale; dict: Dict })
           ))}
         </nav>
 
-        {/* Колонка сдвинута вправо на 10.5cm (lg:ml-[10.5cm]). Ширина колонки
-            расширена до 6 из 12 — иначе длинные названия документов
-            переносились бы после сдвига. Отступ только на lg: на мобильном
-            колонка одна и сдвигать её некуда. */}
-        <div className="lg:col-span-6 lg:ml-[10.5cm]">
+        <div className="lg:col-span-6 xl:col-span-3">
           {SMALL_LINKS.map((l) => (
             // Механика Connect: слово уезжает вправо, стрелка гаснет сзади
             // и её круг-дубль появляется ПЕРЕД словом
@@ -164,9 +163,18 @@ export default function Footer({ locale, dict }: { locale: Locale; dict: Dict })
           ))}
         </div>
 
-        <div className="lg:col-span-2 lg:justify-self-end">
-          {/* Рабочий выбор языка: меню выпадает вверх, EN/RU */}
-          <LanguageSwitcher locale={locale} dict={dict} variant="pill" />
+        {/* Обёртка на всю колонку (а не justify-self-end): только так
+            max-w-full кнопки ограничивает пилюлю и та ужимается под
+            колонку вместо того, чтобы наезжать на документы. Вправо её
+            прижимает xl:ml-auto самой кнопки */}
+        <div className="min-w-0 lg:col-span-12 xl:col-span-3">
+          {/* Рабочий выбор языка: панель раскрывается вниз, EN/RU */}
+          <LanguageSwitcher
+            locale={locale}
+            dict={dict}
+            variant="pill"
+            buttonClassName="xl:ml-auto"
+          />
         </div>
       </div>
 

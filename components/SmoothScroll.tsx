@@ -19,10 +19,39 @@ export default function SmoothScroll({ children }: { children: ReactNode }) {
     // но ScrollTrigger всё равно работает.
     ScrollTrigger.config({ ignoreMobileResize: true });
 
+    // Пересчёт триггеров при изменении высоты документа. ScrollTrigger сам
+    // пересчитывается только на load и resize окна, а высота страницы
+    // меняется и без них: догружаются шрифты и медиа, встроенный
+    // переводчик браузера подменяет текст (на /ru перевод в английский
+    // укорачивал страницу на ~330px), меняется шаг формы. Координаты
+    // start/end оставались старыми — анимации срабатывали на сотни
+    // пикселей не там: контент круга не успевал погаснуть и список статей
+    // наезжал на него. Сравниваем с высотой на момент последнего refresh:
+    // пины сами меняют высоту при пересчёте, и без этого вышел бы цикл.
+    const doc = document.documentElement;
+    let refreshedHeight = doc.scrollHeight;
+    const onRefresh = () => {
+      refreshedHeight = doc.scrollHeight;
+    };
+    ScrollTrigger.addEventListener("refresh", onRefresh);
+    let refreshTimer: number | undefined;
+    const ro = new ResizeObserver(() => {
+      if (Math.abs(doc.scrollHeight - refreshedHeight) < 2) return;
+      window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(() => ScrollTrigger.refresh(), 200);
+    });
+    ro.observe(document.body);
+
+    const stopHeightWatch = () => {
+      ro.disconnect();
+      window.clearTimeout(refreshTimer);
+      ScrollTrigger.removeEventListener("refresh", onRefresh);
+    };
+
     // Пользователь просил меньше движения — оставляем нативную прокрутку
     // и глушим scrub-анимации: их считает ScrollTrigger, а не мы
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
+      return stopHeightWatch;
     }
 
     const lenis = new Lenis({
@@ -38,6 +67,7 @@ export default function SmoothScroll({ children }: { children: ReactNode }) {
     gsap.ticker.lagSmoothing(0);
 
     return () => {
+      stopHeightWatch();
       gsap.ticker.remove(raf);
       lenis.destroy();
     };

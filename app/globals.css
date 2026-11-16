@@ -163,16 +163,25 @@ html.lenis body {
   overflow: hidden;
 }
 
-/* Пользователь просил меньше движения: гасим декоративные анимации.
-   Полностью нулевую длительность не ставим — GSAP-твины с onComplete
-   должны отработать, иначе состояния зависнут на середине. */
+/* Пользователь просил меньше движения: гасим декоративные CSS-анимации.
+
+   transition — строго 0s, НЕ 0.01ms. transition-property по умолчанию
+   `all`, поэтому ненулевая длительность на `*` превращала КАЖДУЮ запись
+   GSAP в инлайн-стиль в CSS-переход. GSAP в момент старта твина читает
+   computed-стиль — и ловил его посреди перехода: gsap.from с delay или
+   stagger записывал «невидимо» как конечное значение и честно доигрывал
+   от 0 до 0. С включённым «Уменьшением движения» в macOS (и такой же
+   настройкой в iOS/Windows) пропадали заголовок героя, список статей и
+   контактная форма. 0s переход не создаёт вовсе; transitionend в проекте
+   никто не слушает. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
 }

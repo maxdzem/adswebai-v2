@@ -16,7 +16,9 @@ export default function AnimatedCircle({ dict }: { dict: Dict }) {
   const contentRef = useRef<HTMLDivElement>(null);
   const videoCircleRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(true);
+  // false до первого реального события play: ролик ленивый, а при
+  // «Уменьшении движения» не стартует вовсе — кнопка не должна врать «пауза»
+  const [playing, setPlaying] = useState(false);
 
   // useGSAP вместо useEffect: сам делает revert при размонтировании
   // и корректно переживает двойной вызов эффектов в StrictMode —
@@ -129,11 +131,20 @@ export default function AnimatedCircle({ dict }: { dict: Dict }) {
                 Гост-буквы и дырка 34vw только с lg: в строку они не влезают
                 (≈554px содержимого при 390px экрана — надпись обрезалась
                 с обеих сторон, её спасал только overflow-x: clip) */}
-            <div className="type-display absolute inset-0 flex select-none flex-col items-center justify-start gap-[2vw] whitespace-nowrap pt-[7svh] text-[20vw] text-ink lg:flex-row lg:items-center lg:justify-center lg:gap-0 lg:pt-0 lg:text-[16vw]">
-              <span className="ghost-letters hidden lg:inline" aria-hidden>
-                web
-              </span>
-              <span className="lg:ml-[1.5vw]">ads</span>
+            {/* С lg — сетка «1fr | дырка | 1fr», а не флекс-строка по центру.
+                Левая группа («web ads») шире правой («ai ads»), и центрированная
+                целиком строка уводила дырку влево от центра экрана — а круг
+                стоит ровно по центру и наезжал на «ads», сильнее или слабее
+                в зависимости от пропорций экрана. Равные боковые колонки
+                ставят дырку строго в центр; лишний текст уходит наружу,
+                за края экрана (justify-end переполняется влево). */}
+            <div className="type-display absolute inset-0 flex select-none flex-col items-center justify-start gap-[2vw] whitespace-nowrap pt-[7svh] text-[20vw] text-ink lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:content-center lg:items-center lg:gap-0 lg:pt-0 lg:text-[16vw]">
+              <div className="flex lg:justify-end">
+                <span className="ghost-letters hidden lg:inline" aria-hidden>
+                  web
+                </span>
+                <span className="lg:ml-[1.5vw]">ads</span>
+              </div>
 
               {/* Обёртка позиционирования — GSAP её НЕ трогает.
                   Масштабируется только вложенный videoCircleRef, поэтому
@@ -181,13 +192,22 @@ export default function AnimatedCircle({ dict }: { dict: Dict }) {
                 </button>
               </div>
 
-              {/* Дырка под круг — только с lg, где круг ушёл в absolute */}
-              <span className="hidden shrink-0 lg:block lg:w-[34vw]" aria-hidden />
+              {/* Дырка под круг — только с lg, где круг ушёл в absolute.
+                  Ширина — круг (min(32vw, 66vh)) плюс по 1vw воздуха с
+                  каждой стороны. Раньше было ровно 34vw: на экранах ниже
+                  16:9 (MacBook 16:10 с панелями браузера) круг упирался
+                  в 66vh и между ним и словами зияли пустые поля */}
+              <span
+                className="hidden shrink-0 lg:block lg:w-[calc(min(32vw,66vh)+2vw)]"
+                aria-hidden
+              />
 
-              <span>ai</span>
-              <span className="ghost-letters hidden lg:ml-[1.5vw] lg:inline" aria-hidden>
-                ads
-              </span>
+              <div className="flex lg:justify-start">
+                <span>ai</span>
+                <span className="ghost-letters hidden lg:ml-[1.5vw] lg:inline" aria-hidden>
+                  ads
+                </span>
+              </div>
             </div>
 
             {/* На мобильном блок центрирован под колонкой, на десктопе —

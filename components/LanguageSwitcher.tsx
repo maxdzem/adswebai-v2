@@ -117,6 +117,7 @@ export default function LanguageSwitcher({
   variant = "dot",
   placement = "down",
   compact = false,
+  buttonClassName = "",
 }: {
   locale: Locale;
   dict: Dict;
@@ -127,6 +128,9 @@ export default function LanguageSwitcher({
   /** Узкая пилюля по ширине содержимого: только текущий язык и шеврон.
    *  Для бара мобильного меню, где на полные 268px места нет. */
   compact?: boolean;
+  /** Доп. классы кнопки-пилюли — например, xl:ml-auto, чтобы прижать её
+   *  вправо, когда обёртка растянута на всю колонку. */
+  buttonClassName?: string;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -486,7 +490,7 @@ export default function LanguageSwitcher({
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-label={dict.lang.change}
-          className="flex max-w-full items-center gap-2"
+          className={`flex max-w-full items-center gap-2 ${buttonClassName}`}
         >
           {compact ? (
             // Компакт: ширина по содержимому, одна подпись, без
@@ -498,7 +502,9 @@ export default function LanguageSwitcher({
             // Две подписи стопкой — при раскрытии они перелистываются.
             // min-w-0 + max-w-full: PILL_W здесь не жёсткая ширина,
             // а максимум — на экранах уже 375px пилюля ужимается,
-            // вместо того чтобы вылезать за поля
+            // вместо того чтобы вылезать за поля. Ужимается она, только
+            // когда ширину ограничивает родитель (max-w-full кнопки) —
+            // поэтому в футере обёртка растянута на всю колонку
             <span
               className="relative grid h-12 min-w-0 items-center overflow-hidden rounded-full bg-white/10 px-6 text-left transition-colors duration-300 hover:bg-white/15"
               style={{ width: PILL_W }}
